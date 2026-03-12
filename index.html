@@ -104,10 +104,10 @@ aside{width:175px;flex-shrink:0;background:var(--bg2);border-right:1px solid var
 
 /* ── PANELS ── */
 .panels{flex:1;min-height:0;display:grid;
-  grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+  grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr;
   gap:1px;background:var(--bdr)}
 .panel{background:var(--bg3);display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.pmap{grid-column:2;grid-row:1/3}
+.pmap{grid-column:2;grid-row:1/4}
 .ph{background:var(--bg2);border-bottom:1px solid var(--bdr);
   padding:5px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:6px}
 .ph-tt{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:2px;color:var(--txt2);text-transform:uppercase;white-space:nowrap}
@@ -217,35 +217,42 @@ aside{width:175px;flex-shrink:0;background:var(--bg2);border-right:1px solid var
 .errbox{color:var(--ifr);font-family:var(--cond);font-size:11px;padding:8px;line-height:1.6;
   border:1px solid rgba(248,113,113,.2);border-radius:3px;background:rgba(248,113,113,.05)}
 
-/* MODAL */
-.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;
-  display:flex;align-items:center;justify-content:center}
-.modal{background:var(--bg2);border:1px solid var(--bdr2);border-radius:5px;padding:22px 26px;width:400px;font-family:var(--cond)}
-.modal h2{font-size:17px;font-weight:700;letter-spacing:2px;color:var(--cyan);margin-bottom:6px}
-.modal p{font-size:11px;color:var(--txt2);line-height:1.6;margin-bottom:14px}
-.modal input{width:100%;background:var(--bg);border:1px solid var(--bdr2);color:var(--txt);
-  padding:7px 9px;font-family:var(--mono);font-size:12px;border-radius:3px;outline:none;margin-bottom:10px}
-.modal input:focus{border-color:var(--cyan)}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;align-items:center}
-.modal a{font-size:10px;color:var(--txt3);text-decoration:none;margin-right:auto}
-.modal a:hover{color:var(--cyan)}
+/* ── CROSSWIND CALCULATOR ── */
+.xwind-section{margin-top:8px}
+.xwind-tabs{display:flex;gap:2px;margin-bottom:6px;flex-wrap:wrap}
+.xtab{background:transparent;border:1px solid var(--bdr);color:var(--txt3);
+  padding:2px 6px;font-family:var(--cond);font-size:9px;letter-spacing:1px;
+  cursor:pointer;border-radius:2px;transition:all .2s}
+.xtab:hover{border-color:var(--bdr2);color:var(--txt2)}
+.xtab.active{background:rgba(34,211,238,.1);border-color:var(--cyan);color:var(--cyan)}
+.rwy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px}
+.rwy-card{background:rgba(0,0,0,.28);border:1px solid var(--bdr);border-radius:3px;padding:7px 9px}
+.rwy-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.rwy-name{font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:2px;color:var(--txt)}
+.rwy-len{font-family:var(--mono);font-size:9px;color:var(--txt3)}
+.rwy-diagram{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.rwy-svg-wrap{flex-shrink:0}
+.xwind-bars{flex:1}
+.xbar-row{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.xbar-lbl{font-family:var(--cond);font-size:8px;color:var(--txt3);width:28px;letter-spacing:.5px;text-align:right;flex-shrink:0}
+.xbar-track{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.xbar-fill{height:100%;border-radius:3px;transition:width .5s}
+.xbar-fill.hw{background:var(--green)}
+.xbar-fill.xw{background:var(--wx)}
+.xbar-fill.xw-warn{background:var(--ifr)}
+.xbar-val{font-family:var(--mono);font-size:10px;width:36px;text-align:right;flex-shrink:0}
+.xwind-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:4px}
+.xnum{background:rgba(0,0,0,.2);border-radius:2px;padding:3px 5px;text-align:center}
+.xnum-lbl{font-family:var(--cond);font-size:8px;color:var(--txt3);letter-spacing:1px;display:block}
+.xnum-val{font-family:var(--mono);font-size:12px;display:block;margin-top:1px}
+.xwind-limit{font-family:var(--cond);font-size:9px;color:var(--txt3);margin-top:4px;text-align:center;letter-spacing:.5px}
+.xw-ok{color:var(--green)}.xw-caution{color:var(--wx)}.xw-exceed{color:var(--ifr)}
+/* TAF period source label */
+.xwind-src{font-family:var(--mono);font-size:9px;color:var(--txt3);margin-bottom:6px;padding:3px 6px;
+  background:rgba(0,0,0,.2);border-radius:2px;display:inline-block}
 </style>
 </head>
 <body>
-
-<!-- API KEY MODAL -->
-<div class="modal-bg" id="key-modal">
-  <div class="modal">
-    <h2>✈ AVIMET</h2>
-    <p>Enter your <b style="color:var(--txt)">CheckWX API key</b> to connect.<br>
-    Free key at <b style="color:var(--cyan)">checkwxapi.com</b></p>
-    <input type="text" id="key-input" placeholder="CheckWX API key" maxlength="64"/>
-    <div class="modal-btns">
-      <a href="https://www.checkwxapi.com" target="_blank">Get a free key →</a>
-      <button class="btn" onclick="saveKey()">CONNECT</button>
-    </div>
-  </div>
-</div>
 
 <header>
   <div class="logo">
@@ -268,7 +275,6 @@ aside{width:175px;flex-shrink:0;background:var(--bg2);border-right:1px solid var
   </div>
   <div class="hdr-rt">
     <button class="btn" onclick="loadAll()">↻ REFRESH</button>
-    <button class="btn btn-sm" onclick="changeKey()">⚙ KEY</button>
   </div>
 </header>
 
@@ -361,8 +367,22 @@ aside{width:175px;flex-shrink:0;background:var(--bg2);border-right:1px solid var
           <span class="ph-tt">TAF</span>
           <span class="ph-tg" id="t-taf">—</span>
         </div>
-        <div class="pb" id="p-taf">
+        <div class="pb" id="p-taf" style="overflow-y:auto">
           <div class="loading"><div class="spin"></div><span>AWAITING KEY…</span></div>
+        </div>
+      </div>
+
+      <!-- CROSSWIND CALCULATOR -->
+      <div class="panel">
+        <div class="ph">
+          <span class="ph-tt">Crosswind Calculator</span>
+          <div class="ph-right" id="xwind-tabs-hdr" style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">
+            <button class="xtab active" id="xtab-obs" onclick="xwindSetSource('obs',this)">OBS</button>
+            <span id="xwind-taf-tabs" style="display:contents"></span>
+          </div>
+        </div>
+        <div class="pb" id="p-xwind">
+          <div class="loading"><div class="spin"></div><span>LOADING RUNWAYS…</span></div>
         </div>
       </div>
     </div>
@@ -392,32 +412,13 @@ const AIRPORTS = [
 ];
 
 const CWX_BASE = 'https://api.checkwx.com';
-let API_KEY = localStorage.getItem('cwx_key') || '';
+const API_KEY = '97ee6acd0cdc42dd9d443efe7235e464';
 let cur = AIRPORTS[0];
 let map, apMarkers = {};
 let radarOn = true, ltgOn = false;
 let currentHours = 0;   // 0 = latest only
 let autoTimer, tourTimer;
 let ltgData = {};  // cache per airport
-
-// ═══════════════════════════════════════════════════════════
-// API KEY
-// ═══════════════════════════════════════════════════════════
-function saveKey(){
-  const v=document.getElementById('key-input').value.trim();
-  if(!v)return;
-  API_KEY=v; localStorage.setItem('cwx_key',v);
-  document.getElementById('key-modal').style.display='none';
-  loadAll();
-}
-function changeKey(){
-  document.getElementById('key-input').value=API_KEY;
-  document.getElementById('key-modal').style.display='flex';
-}
-window.addEventListener('DOMContentLoaded',()=>{
-  if(API_KEY) document.getElementById('key-modal').style.display='none';
-  document.getElementById('key-input').addEventListener('keydown',e=>{if(e.key==='Enter')saveKey();});
-});
 
 // ═══════════════════════════════════════════════════════════
 // CLOCKS — UTC + local time for selected airport
@@ -1043,7 +1044,6 @@ async function loadLightning(){
 // LOAD ALL DATA
 // ═══════════════════════════════════════════════════════════
 async function loadAll(){
-  if(!API_KEY){document.getElementById('key-modal').style.display='flex';return;}
   const n=new Date();
   document.getElementById('lbl-upd').textContent=
     'UPD '+String(n.getUTCHours()).padStart(2,'0')+':'+String(n.getUTCMinutes()).padStart(2,'0')+'Z';
@@ -1064,6 +1064,8 @@ async function loadAll(){
     updateMarkerColor(cur.icao,d.fr);
     updateSidebarItem(cur.icao,curMetar);
   }
+  // Load runways and crosswind calculator
+  loadRunwaysAndXwind(cur.icao, curMetar, tData);
 
   // Radar refresh
   if(map?.loaded()&&map.getSource('radar')){
@@ -1106,6 +1108,14 @@ function selectAp(idx){
   // Reset to current METAR view
   histHours=0;
   document.querySelectorAll('.htab').forEach((b,i)=>b.classList.toggle('active',i===0));
+  // Reset xwind to OBS
+  xwindSource='obs';
+  xwindSourceData=null;
+  curRunways=[];
+  curTafPeriods=[];
+  document.getElementById('p-xwind').innerHTML='<div class="loading"><div class="spin"></div><span>LOADING RUNWAYS…</span></div>';
+  if(document.getElementById('xwind-taf-tabs')) document.getElementById('xwind-taf-tabs').innerHTML='';
+  document.querySelectorAll('.xtab').forEach((b,i)=>{if(b.id==='xtab-obs')b.classList.add('active');else b.classList.remove('active');});
 
   // Reload lightning for new airport
   if(ltgOn) loadLightning();
@@ -1114,14 +1124,266 @@ function selectAp(idx){
 }
 
 // ═══════════════════════════════════════════════════════════
+// RUNWAY DATA + CROSSWIND CALCULATOR
+// ═══════════════════════════════════════════════════════════
+
+// Cache runway data per ICAO to avoid re-fetching
+const runwayCache = {};
+
+async function getRunways(icao){
+  if(runwayCache[icao]) return runwayCache[icao];
+  const j = await cwx(`/station/${icao}/runways`);
+  const runways = j?.data?.[0]?.runways || [];
+  // Normalize: each runway object has he1/he2 (high-end, low-end)
+  // CheckWX returns: { he_heading_degT, le_heading_degT, he_ident, le_ident, length_ft, width_ft }
+  const normalized = runways.map(r => ({
+    he_ident:    r.he_ident    || '??',
+    le_ident:    r.le_ident    || '??',
+    he_heading:  r.he_heading_degT ?? null,
+    le_heading:  r.le_heading_degT ?? null,
+    length_ft:   r.length_ft   || 0,
+    width_ft:    r.width_ft    || 0,
+  })).filter(r => r.he_heading !== null);
+  runwayCache[icao] = normalized;
+  return normalized;
+}
+
+// Crosswind math
+// windDir & rwyHdg in degrees true, windSpd in knots
+// Returns { headwind, crosswind, tailwind }
+function calcXwind(windDir, windSpd, rwyHdg){
+  if(windDir === null || windDir === undefined || windSpd === null) return null;
+  const diff = (windDir - rwyHdg) * Math.PI / 180;
+  const headwind  = Math.round(windSpd * Math.cos(diff));
+  const crosswind = Math.abs(Math.round(windSpd * Math.sin(diff)));
+  // positive headwind = headwind, negative = tailwind
+  return {
+    headwind:  headwind >= 0 ? headwind  : 0,
+    tailwind:  headwind <  0 ? -headwind : 0,
+    crosswind,
+  };
+}
+
+// Pick the better of two runway ends based on headwind component
+function bestEnd(windDir, windSpd, rwy){
+  if(windDir === null) return null; // variable wind
+  const he = calcXwind(windDir, windSpd, rwy.he_heading);
+  const le = calcXwind(windDir, windSpd, rwy.le_heading ?? ((rwy.he_heading + 180) % 360));
+  // Prefer end with more headwind (less tailwind)
+  const heVal = he ? he.headwind - he.tailwind*2 : -999;
+  const leVal = le ? le.headwind - le.tailwind*2 : -999;
+  return heVal >= leVal
+    ? { end:'he', ident:rwy.he_ident, hdg:rwy.he_heading,            xw:he }
+    : { end:'le', ident:rwy.le_ident, hdg:rwy.le_heading ?? ((rwy.he_heading+180)%360), xw:le };
+}
+
+// Typical max crosswind limits by runway width category (rough guide)
+function maxXwindLimit(widthFt){
+  if(widthFt >= 150) return 25;  // large/heavy
+  if(widthFt >= 100) return 20;  // medium wide
+  return 15;                      // narrow
+}
+
+// Wind source for crosswind calc: 'obs' or TAF period index
+let xwindSource = 'obs';
+let xwindSourceData = null;  // {windDir, windSpd, windGust, label}
+let curRunways = [];
+let curTafPeriods = [];
+
+function xwindSetSource(src, btn){
+  xwindSource = src;
+  document.querySelectorAll('.xtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderXwind();
+}
+
+function getXwindWind(){
+  return xwindSourceData;
+}
+
+async function loadRunwaysAndXwind(icao, metarData, tafData){
+  document.getElementById('p-xwind').innerHTML='<div class="loading"><div class="spin"></div><span>LOADING RUNWAYS…</span></div>';
+
+  curRunways = await getRunways(icao);
+
+  // Store TAF periods for tab building
+  curTafPeriods = [];
+  if(tafData?.forecast){
+    tafData.forecast.forEach((f,i)=>{
+      if(!f.wind) return;
+      const chg = f.change?.indicator?.code || (i===0?'BASE':'FM');
+      const from = f.timestamp?.from ? fmtTime(f.timestamp.from) : '';
+      curTafPeriods.push({
+        idx: i,
+        label: chg==='BASE' ? 'BASE' : `${chg} ${from}`,
+        shortLabel: chg==='BASE' ? 'BASE' : `${chg}${i}`,
+        windDir: f.wind.degrees ?? null,
+        windSpd: f.wind.speed_kts ?? 0,
+        windGust: f.wind.gust_kts || null,
+        windVar: !!f.wind.variable_direction,
+      });
+    });
+  }
+
+  // Set source data for obs
+  if(metarData){
+    const d = parseCwx(metarData);
+    xwindSourceData = {
+      windDir: d.windVariable ? null : d.windDirRaw,
+      windSpd: d.windSpd || 0,
+      windGust: d.windGust || null,
+      windVar: d.windVariable,
+      label: `OBS ${d.obsTime||''}`,
+    };
+  }
+
+  // Build TAF tabs
+  buildXwindTabs();
+  renderXwind();
+}
+
+function buildXwindTabs(){
+  const container = document.getElementById('xwind-taf-tabs');
+  if(!container) return;
+  container.innerHTML = curTafPeriods.map((p,i)=>
+    `<button class="xtab" id="xtab-taf-${i}" onclick="xwindSelectTaf(${i},this)">${p.shortLabel}</button>`
+  ).join('');
+}
+
+function xwindSelectTaf(idx, btn){
+  xwindSource = 'taf-'+idx;
+  const p = curTafPeriods[idx];
+  if(!p) return;
+  xwindSourceData = {
+    windDir: p.windVar ? null : p.windDir,
+    windSpd: p.windSpd,
+    windGust: p.windGust,
+    windVar: p.windVar,
+    label: p.label,
+  };
+  document.querySelectorAll('.xtab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderXwind();
+}
+
+function renderXwind(){
+  const p = document.getElementById('p-xwind');
+  const wind = xwindSourceData;
+
+  if(!curRunways.length){
+    p.innerHTML='<div class="errbox">⚠ No runway data available for '+cur.icao+'.<br><span style="font-size:10px;color:var(--txt3)">CheckWX may not have runway data for this station.</span></div>';
+    return;
+  }
+
+  const windDir = wind?.windDir ?? null;
+  const windSpd = wind?.windSpd ?? 0;
+  const windGust = wind?.windGust ?? null;
+  const isVar = wind?.windVar ?? false;
+  const label = wind?.label || '';
+  const effectiveSpd = windGust || windSpd;
+
+  let html = `<div class="xwind-src">Wind source: ${label}${isVar?' — VARIABLE WIND':''}</div>`;
+  html += '<div class="rwy-grid">';
+
+  curRunways.forEach(rwy=>{
+    const maxW = rwy.width_ft;
+    const limit = maxXwindLimit(maxW);
+    const best = bestEnd(windDir, effectiveSpd, rwy);
+    const he = calcXwind(windDir, effectiveSpd, rwy.he_heading);
+    const le = calcXwind(windDir, effectiveSpd, rwy.le_heading ?? ((rwy.he_heading+180)%360));
+    const leHdg = rwy.le_heading ?? ((rwy.he_heading+180)%360);
+
+    // Runway diagram SVG
+    const rwyAngle = rwy.he_heading - 90;
+    const cx=30,cy=30,rlen=24,rwide=5;
+    const rad = rwy.he_heading * Math.PI/180;
+    const x1=cx-rlen*Math.sin(rad), y1=cy+rlen*Math.cos(rad);
+    const x2=cx+rlen*Math.sin(rad), y2=cy-rlen*Math.cos(rad);
+    // Wind arrow on diagram
+    let windArrow='';
+    if(windDir!==null && !isVar){
+      const wrad=windDir*Math.PI/180;
+      const wx2=cx+20*Math.sin(wrad), wy2=cy-20*Math.cos(wrad);
+      const wx1=cx-12*Math.sin(wrad), wy1=cy+12*Math.cos(wrad);
+      windArrow=`<line x1="${wx1}" y1="${wy1}" x2="${wx2}" y2="${wy2}" stroke="rgba(251,191,36,.7)" stroke-width="1.5" stroke-dasharray="2,2"/>
+        <polygon points="${wx2},${wy2} ${wx2-3*Math.cos(wrad)-3*Math.sin(wrad)},${wy2-3*Math.sin(wrad)+3*Math.cos(wrad)} ${wx2-3*Math.cos(wrad)+3*Math.sin(wrad)},${wy2-3*Math.sin(wrad)-3*Math.cos(wrad)}" fill="rgba(251,191,36,.7)"/>`;
+    }
+    const rwyDiag=`<svg viewBox="0 0 60 60" width="60" height="60">
+      <circle cx="${cx}" cy="${cy}" r="28" fill="none" stroke="#182840" stroke-width="1"/>
+      <rect x="${cx-rwide/2}" y="${cy-rlen}" width="${rwide}" height="${rlen*2}"
+        transform="rotate(${rwy.he_heading},${cx},${cy})" fill="#243d5c" rx="1"/>
+      <text x="${x1}" y="${y1}" text-anchor="middle" dominant-baseline="middle"
+        fill="#6a8fae" font-size="7" font-family="monospace">${rwy.le_ident}</text>
+      <text x="${x2}" y="${y2}" text-anchor="middle" dominant-baseline="middle"
+        fill="#6a8fae" font-size="7" font-family="monospace">${rwy.he_ident}</text>
+      ${windArrow}
+      <text x="30" y="58" text-anchor="middle" fill="#2e4a63" font-size="5" font-family="monospace">N↑</text>
+      <line x1="30" y1="2" x2="30" y2="7" stroke="#2e4a63" stroke-width="1"/>
+    </svg>`;
+
+    // Render both ends
+    function endBlock(ident, hdg, xw, isBest){
+      if(!xw) return '';
+      const xwPct = Math.min(xw.crosswind/limit*100,100);
+      const hwPct = Math.min(xw.headwind/40*100,100);
+      const twPct = Math.min(xw.tailwind/40*100,100);
+      const xwCls = xw.crosswind>limit?'xw-exceed':xw.crosswind>limit*0.75?'xw-caution':'xw-ok';
+      const xwBarCls = xw.crosswind>limit?'xw-warn':xw.crosswind>limit*0.75?'xw':'hw';
+      const bestMark = isBest?'<span style="color:var(--cyan);font-size:9px;margin-left:4px">★ PREFERRED</span>':'';
+      return `<div style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(24,40,64,.6)">
+        <div style="font-family:var(--cond);font-size:10px;color:var(--txt2);margin-bottom:3px">
+          RWY <b style="color:var(--txt)">${ident}</b> (${String(hdg).padStart(3,'0')}°T)${bestMark}
+        </div>
+        <div class="xbar-row">
+          <span class="xbar-lbl">HW</span>
+          <div class="xbar-track"><div class="xbar-fill hw" style="width:${hwPct}%"></div></div>
+          <span class="xbar-val" style="color:var(--green)">${xw.headwind}kt</span>
+        </div>
+        ${xw.tailwind>0?`<div class="xbar-row">
+          <span class="xbar-lbl">TW</span>
+          <div class="xbar-track"><div class="xbar-fill xw-warn" style="width:${twPct}%"></div></div>
+          <span class="xbar-val" style="color:var(--ifr)">${xw.tailwind}kt</span>
+        </div>`:''}
+        <div class="xbar-row">
+          <span class="xbar-lbl">XW</span>
+          <div class="xbar-track"><div class="xbar-fill ${xwBarCls}" style="width:${xwPct}%"></div></div>
+          <span class="xbar-val ${xwCls}">${xw.crosswind}kt</span>
+        </div>
+        <div class="xwind-limit ${xwCls}">XW limit ~${limit}kt · ${xw.crosswind<=limit?'✓ Within':'✗ Exceeds'} limit</div>
+      </div>`;
+    }
+
+    const heBlock = endBlock(rwy.he_ident, rwy.he_heading, he, best?.end==='he');
+    const leBlock = endBlock(rwy.le_ident, leHdg, le, best?.end==='le');
+
+    html+=`<div class="rwy-card">
+      <div class="rwy-hdr">
+        <div class="rwy-name">RWY ${rwy.he_ident}/${rwy.le_ident}</div>
+        <div class="rwy-len">${rwy.length_ft.toLocaleString()} × ${rwy.width_ft} ft</div>
+      </div>
+      <div class="rwy-diagram">
+        <div class="rwy-svg-wrap">${rwyDiag}</div>
+        <div style="flex:1;font-family:var(--mono);font-size:9px;color:var(--txt3)">
+          ${isVar?'<span style="color:var(--wx)">⚠ VARIABLE WIND<br>XW calc unavailable</span>':
+            windDir===null?'<span style="color:var(--txt3)">No wind data</span>':
+            `Wind: <span style="color:var(--txt)">${String(windDir).padStart(3,'0')}°@${windSpd}${windGust?'G'+windGust:''}kt</span>`
+          }
+        </div>
+      </div>
+      ${heBlock}${leBlock}
+    </div>`;
+  });
+
+  html += '</div>';
+  p.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════
 buildSidebar();
 initMap();
-if(API_KEY){
-  document.getElementById('key-modal').style.display='none';
-  loadAll();
-}
+loadAll();
 setInterval(loadAll,5*60*1000);
 </script>
 </body>

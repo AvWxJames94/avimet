@@ -3,468 +3,578 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AviMet — Aviation Weather Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<title>AviMet · Aviation Weather</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <style>
-:root{
-  --bg:#060d18;--bg2:#09121f;--bg3:#0d1a2b;--bg4:#0a1628;
-  --bdr:#162035;--bdr2:#1e3050;--bdr3:#2a4468;
-  --txt:#e8f4ff;--txt2:#7baed4;--txt3:#2d4d6a;
-  --cyan:#00e5ff;--blue:#2979ff;--indigo:#7c4dff;
-  --vfr:#b3d9ff;--mvfr:#42a5f5;--ifr:#ef5350;--lifr:#ec407a;
-  --wx:#ffca28;--green:#00e676;--orange:#ff9800;
-  --mono:'Share Tech Mono',monospace;
-  --cond:'Barlow Condensed',sans-serif;
-  --body:'Barlow',sans-serif;
-  --fs-base:clamp(12px,1.2vw,15px);
-  --panel-radius:6px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:var(--fs-base)}
-html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--txt);font-family:var(--body);display:flex;flex-direction:column}
-*{scrollbar-width:thin;scrollbar-color:var(--bdr3) transparent}
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-thumb{background:var(--bdr3);border-radius:3px}
+/* ═══════════════════════════════════════════════════════════
+   DESIGN SYSTEM — Glass Cockpit Dark
+═══════════════════════════════════════════════════════════ */
+:root {
+  /* Core palette */
+  --void:   #020810;
+  --ink:    #050e1c;
+  --panel:  #071424;
+  --raised: #0a1d36;
+  --edge:   #0f2847;
+  --line:   #163256;
+  --mute:   #1e4070;
 
-/* ══ HEADER ══════════════════════════════════════════════ */
-header{
-  height:52px;flex-shrink:0;
-  background:linear-gradient(90deg,#040b14 0%,#071220 40%,#040b14 100%);
-  border-bottom:1px solid var(--bdr2);
-  display:flex;align-items:center;justify-content:space-between;padding:0 16px;
-  z-index:100;position:relative;
-}
-header::after{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.4;
-}
-.logo{display:flex;align-items:center;gap:9px}
-.logo-mark{
-  width:30px;height:30px;
-  background:linear-gradient(135deg,var(--cyan),var(--blue));
-  clip-path:polygon(50% 0%,100% 35%,82% 100%,18% 100%,0% 35%);
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  filter:drop-shadow(0 0 8px rgba(0,229,255,.5));
-}
-.logo-txt{font-family:var(--cond);font-size:clamp(16px,1.8vw,22px);font-weight:900;letter-spacing:4px}
-.logo-txt span{color:var(--cyan);text-shadow:0 0 12px rgba(0,229,255,.6)}
-.hdr-clocks{display:flex;align-items:center;gap:20px}
-.clk{display:flex;flex-direction:column;align-items:center;line-height:1}
-.clk-lbl{font-family:var(--cond);font-size:clamp(7px,.7vw,9px);letter-spacing:2px;color:var(--txt3);text-transform:uppercase;margin-bottom:2px}
-.clk-val{font-family:var(--mono);font-size:clamp(12px,1.2vw,16px);letter-spacing:2px}
-.clk-val.z{color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.4)}
-.clk-val.l{color:#80deea}
-.hdr-mid{display:flex;align-items:center;gap:8px;font-family:var(--cond);font-size:clamp(9px,.9vw,11px);color:var(--txt3);letter-spacing:1px}
-.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
-.hdr-rt{display:flex;align-items:center;gap:8px}
-.btn{
-  background:rgba(0,229,255,.07);border:1px solid var(--bdr3);color:var(--cyan);
-  padding:5px 12px;border-radius:4px;font-family:var(--cond);font-size:clamp(10px,1vw,12px);
-  font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .2s;white-space:nowrap;
-}
-.btn:hover{background:rgba(0,229,255,.15);border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.2)}
-.btn-tog{padding:4px 8px;font-size:clamp(9px,.9vw,11px);border-color:var(--bdr2);color:var(--txt2)}
-.btn-tog.active{background:rgba(0,229,255,.12);border-color:var(--cyan);color:var(--cyan)}
+  /* Text */
+  --t1: #e4f2ff;
+  --t2: #6fa8d4;
+  --t3: #2d5580;
+  --t4: #163256;
 
-/* ══ LAYOUT ══════════════════════════════════════════════ */
-.wrap{display:flex;flex:1;min-height:0;overflow:hidden}
+  /* Accents */
+  --cyan:  #00d4ff;
+  --cyan2: #00a8cc;
+  --blue:  #1a6bff;
+  --green: #00ff9d;
+  --amber: #ffc107;
+  --red:   #ff3b5c;
+  --pink:  #ff4da6;
 
-/* ══ SIDEBAR ══════════════════════════════════════════════ */
-aside{
-  width:clamp(160px,14vw,210px);flex-shrink:0;
-  background:var(--bg2);border-right:1px solid var(--bdr2);
-  display:flex;flex-direction:column;overflow:hidden;
-}
-.sb-hdr{
-  font-family:var(--cond);font-size:clamp(8px,.8vw,10px);font-weight:700;
-  letter-spacing:2.5px;color:var(--txt3);padding:10px 12px 6px;
-  border-bottom:1px solid var(--bdr);text-transform:uppercase;
-}
-#ap-list{flex:1;overflow-y:auto}
-.apit{
-  display:flex;align-items:flex-start;gap:8px;padding:8px 12px;
-  cursor:pointer;border-bottom:1px solid rgba(22,32,53,.7);transition:background .15s;
-}
-.apit:hover{background:var(--bg3)}
-.apit.active{background:rgba(0,229,255,.06);border-left:3px solid var(--cyan)}
-.fdot{
-  width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:4px;
-  border:1px solid rgba(255,255,255,.1);transition:all .4s;
-}
-.fd-VFR {background:var(--vfr);box-shadow:0 0 7px rgba(179,217,255,.8)}
-.fd-MVFR{background:var(--mvfr);box-shadow:0 0 7px rgba(66,165,245,.9)}
-.fd-IFR {background:var(--ifr);box-shadow:0 0 7px rgba(239,83,80,.9)}
-.fd-LIFR{background:var(--lifr);box-shadow:0 0 7px rgba(236,64,122,.9)}
-.fd-UNK {background:#334155}
-.ap-info{flex:1;min-width:0}
-.ap-id{font-family:var(--mono);font-size:clamp(11px,1.1vw,14px);font-weight:bold;letter-spacing:1px}
-.ap-nm{font-size:clamp(8px,.8vw,10px);color:var(--txt2);font-family:var(--cond);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ap-wx{font-size:clamp(8px,.8vw,10px);color:var(--txt2);font-family:var(--mono);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ap-local{font-size:clamp(7px,.7vw,9px);color:var(--txt3);font-family:var(--mono);margin-top:1px}
-.sb-leg{padding:8px 12px;border-top:1px solid var(--bdr)}
-.leg-ttl{font-family:var(--cond);font-size:clamp(7px,.7vw,9px);font-weight:700;letter-spacing:2px;color:var(--txt3);text-transform:uppercase;margin-bottom:5px}
-.leg-r{display:flex;align-items:center;gap:7px;font-family:var(--cond);font-size:clamp(9px,.9vw,11px);color:var(--txt2);padding:2px 0}
-.wxbox{display:inline-block;width:12px;height:10px;background:rgba(255,202,40,.18);border:1px solid var(--wx);border-radius:2px}
-.sb-ft{padding:7px 12px;font-family:var(--cond);font-size:clamp(7px,.7vw,9px);color:var(--txt3);border-top:1px solid var(--bdr);line-height:1.5}
+  /* FR colors */
+  --vfr:  #a8d8ff;
+  --mvfr: #4d9fff;
+  --ifr:  #ff4444;
+  --lifr: #ff44aa;
 
-/* ══ CONTENT ══════════════════════════════════════════════ */
-.content{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  /* Fonts */
+  --f-display: 'Orbitron', monospace;
+  --f-mono:    'Share Tech Mono', monospace;
+  --f-ui:      'Rajdhani', sans-serif;
 
-/* ══ BANNER ══════════════════════════════════════════════ */
-.banner{
-  background:linear-gradient(90deg,var(--bg2) 0%,rgba(9,18,31,.95) 100%);
-  border-bottom:1px solid var(--bdr2);
-  padding:8px 16px;display:flex;align-items:center;gap:16px;flex-shrink:0;flex-wrap:wrap;
+  /* Layout */
+  --hdr-h:  48px;
+  --bar-h:  24px;
+  --sb-w:   190px;
 }
-.bn-icao{
-  font-family:var(--cond);font-size:clamp(24px,2.8vw,38px);font-weight:900;
-  letter-spacing:5px;line-height:1;color:var(--cyan);
-  text-shadow:0 0 20px rgba(0,229,255,.4);
-}
-.bn-sub{display:flex;flex-direction:column;gap:2px}
-.bn-name{font-family:var(--cond);font-size:clamp(10px,1.1vw,14px);color:var(--txt2);letter-spacing:.8px}
-.bn-coord{font-family:var(--mono);font-size:clamp(8px,.8vw,10px);color:var(--txt3)}
-.bn-div{width:1px;height:32px;background:var(--bdr2);flex-shrink:0}
-.bn-st{display:flex;flex-direction:column;gap:2px}
-.bn-lbl{font-family:var(--cond);font-size:clamp(7px,.7vw,9px);color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase}
-.bn-val{font-family:var(--mono);font-size:clamp(11px,1.2vw,14px)}
-.frb{
-  padding:3px 9px;border-radius:3px;font-family:var(--cond);
-  font-size:clamp(12px,1.3vw,16px);font-weight:700;letter-spacing:2px;display:inline-block;
-}
-.frb-VFR {background:rgba(179,217,255,.12);color:var(--vfr);border:1px solid rgba(179,217,255,.3)}
-.frb-MVFR{background:rgba(66,165,245,.12);color:var(--mvfr);border:1px solid rgba(66,165,245,.35)}
-.frb-IFR {background:rgba(239,83,80,.12);color:var(--ifr);border:1px solid rgba(239,83,80,.35)}
-.frb-LIFR{background:rgba(236,64,122,.12);color:var(--lifr);border:1px solid rgba(236,64,122,.35)}
-.frb-UNK {background:rgba(51,65,85,.3);color:#64748b;border:1px solid #334155}
 
-/* ══ MAIN PANELS ══════════════════════════════════════════ */
-.panels{
-  flex:1;min-height:0;display:grid;
-  grid-template-columns:minmax(320px,2fr) minmax(320px,2fr) minmax(300px,3fr);
-  grid-template-rows:minmax(0,1fr) minmax(0,1fr);
-  gap:2px;background:var(--bdr);
-}
-.panel{background:var(--bg3);display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.pmap{grid-column:3;grid-row:1/3}
-.ph{
-  background:var(--bg2);border-bottom:1px solid var(--bdr2);
-  padding:6px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
-  gap:6px;min-height:34px;
-}
-.ph-tt{
-  font-family:var(--cond);font-size:clamp(9px,1vw,12px);font-weight:700;
-  letter-spacing:2px;color:var(--txt2);text-transform:uppercase;white-space:nowrap;
-}
-.ph-tg{font-family:var(--mono);font-size:clamp(8px,.8vw,10px);color:var(--txt3)}
-.ph-rt{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.pb{flex:1;overflow-y:auto;padding:10px 12px;min-height:0}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--void); }
+body { color: var(--t1); font-family: var(--f-ui); font-size: 14px; display: flex; flex-direction: column; }
+* { scrollbar-width: thin; scrollbar-color: var(--mute) transparent; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-thumb { background: var(--mute); border-radius: 2px; }
 
-/* ══ COLOR CLASSES ══════════════════════════════════════════ */
-.cc-VFR {color:var(--vfr)}.cc-MVFR{color:var(--mvfr)}
-.cc-IFR {color:var(--ifr)}.cc-LIFR{color:var(--lifr)}
-.cc-wx  {background:rgba(255,202,40,.14);color:var(--wx);border-radius:2px;padding:0 2px}
-.cc-cl-VFR {color:var(--vfr)}.cc-cl-MVFR{color:var(--mvfr)}
-.cc-cl-IFR {color:var(--ifr)}.cc-cl-LIFR{color:var(--lifr)}
+/* ═══════════ HEADER ═══════════════════════════════════════ */
+header {
+  height: var(--hdr-h); flex-shrink: 0;
+  background: var(--ink);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 0;
+  padding: 0; z-index: 200; position: relative; overflow: hidden;
+}
+header::before {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--cyan) 30%, var(--blue) 70%, transparent 100%);
+  opacity: .6;
+}
+.hdr-brand {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 20px; border-right: 1px solid var(--line); height: 100%;
+  background: linear-gradient(90deg, rgba(0,212,255,.06), transparent);
+}
+.brand-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  background: conic-gradient(var(--cyan) 0deg, var(--blue) 180deg, var(--cyan) 360deg);
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+  filter: drop-shadow(0 0 8px rgba(0,212,255,.7));
+}
+.brand-name {
+  font-family: var(--f-display); font-size: 16px; font-weight: 700; letter-spacing: 5px;
+  color: var(--t1); text-transform: uppercase;
+}
+.brand-name em { color: var(--cyan); font-style: normal; }
+.hdr-clocks {
+  display: flex; align-items: stretch; gap: 0;
+  padding: 0 4px; border-right: 1px solid var(--line);
+}
+.clock {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 0 14px; gap: 1px; min-width: 110px;
+}
+.clock + .clock { border-left: 1px solid var(--t4); }
+.clk-label { font-family: var(--f-ui); font-size: 8px; font-weight: 600; letter-spacing: 2.5px; color: var(--t3); text-transform: uppercase; }
+.clk-time { font-family: var(--f-display); font-size: 15px; font-weight: 500; letter-spacing: 2px; }
+.clk-time.zulu { color: var(--cyan); text-shadow: 0 0 12px rgba(0,212,255,.5); }
+.clk-time.local { color: #7dd8ef; }
+.hdr-status {
+  display: flex; align-items: center; gap: 6px; padding: 0 16px;
+  font-family: var(--f-ui); font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  color: var(--t3); border-right: 1px solid var(--line);
+}
+.pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+.hdr-controls { display: flex; align-items: center; gap: 8px; padding: 0 16px; margin-left: auto; }
+.hbtn {
+  height: 28px; padding: 0 12px;
+  background: var(--raised); border: 1px solid var(--line);
+  color: var(--t2); font-family: var(--f-ui); font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+  cursor: pointer; border-radius: 3px; text-transform: uppercase; transition: all .15s;
+}
+.hbtn:hover { background: var(--edge); border-color: var(--cyan); color: var(--cyan); }
+.hbtn.active { background: rgba(0,212,255,.12); border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 8px rgba(0,212,255,.2); }
+.unit-tog { display: flex; gap: 2px; }
+.unit-tog .hbtn { border-radius: 2px; min-width: 36px; text-align: center; padding: 0 8px; }
 
-/* ══ CURRENT CONDITIONS (broadcast style) ════════════════ */
-.cond-wrap{display:flex;flex-direction:column;gap:8px}
-.cond-hero{
-  display:grid;grid-template-columns:auto 1fr;gap:12px;
-  background:rgba(0,0,0,.3);border:1px solid var(--bdr2);border-radius:var(--panel-radius);
-  padding:12px;align-items:center;
+/* ═══════════ BODY LAYOUT ══════════════════════════════════ */
+.body { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+/* ═══════════ SIDEBAR ══════════════════════════════════════ */
+.sidebar {
+  width: var(--sb-w); flex-shrink: 0;
+  background: var(--ink); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; overflow: hidden;
 }
-.cond-symbol{font-size:clamp(40px,5vw,64px);line-height:1;filter:drop-shadow(0 0 10px rgba(0,229,255,.3));text-align:center}
-.cond-main-vals{display:flex;flex-direction:column;gap:4px}
-.cond-temp{font-family:var(--cond);font-size:clamp(32px,4vw,52px);font-weight:900;line-height:1;letter-spacing:2px}
-.cond-sky{font-family:var(--cond);font-size:clamp(13px,1.4vw,18px);color:var(--txt2);letter-spacing:1px;font-weight:600}
-.cond-wxcodes{font-family:var(--mono);font-size:clamp(9px,1vw,12px);margin-top:2px}
-.cond-grid{
-  display:grid;grid-template-columns:1fr 1fr;gap:6px;
+.sb-section-title {
+  font-family: var(--f-ui); font-size: 9px; font-weight: 700;
+  letter-spacing: 3px; color: var(--t3); text-transform: uppercase;
+  padding: 8px 12px 5px; border-bottom: 1px solid var(--t4);
 }
-.cond-tile{
-  background:rgba(0,0,0,.25);border:1px solid var(--bdr2);border-radius:4px;
-  padding:8px 10px;display:flex;flex-direction:column;gap:2px;
+.ap-list { flex: 1; overflow-y: auto; }
+.ap-item {
+  padding: 7px 10px 7px 12px; border-bottom: 1px solid rgba(22,50,86,.5);
+  cursor: pointer; transition: background .1s; display: flex; align-items: flex-start; gap: 8px;
+  position: relative;
 }
-.cond-tile-lbl{font-family:var(--cond);font-size:clamp(7px,.75vw,9px);letter-spacing:2px;color:var(--txt3);text-transform:uppercase}
-.cond-tile-val{font-family:var(--mono);font-size:clamp(14px,1.6vw,20px);font-weight:bold;line-height:1.1}
-.cond-tile-sub{font-family:var(--cond);font-size:clamp(8px,.8vw,10px);color:var(--txt2)}
-/* tile accent colors */
-.tv-temp {color:#ff6e40}
-.tv-dew  {color:#40c4ff}
-.tv-hum  {color:#69f0ae}
-.tv-wind {color:#e040fb}
-.tv-vis  {color:var(--vfr)}
-.tv-alt  {color:#ffca28}
-.tv-ceil {color:var(--cyan)}
-.tv-spread{color:#ff9800}
+.ap-item:hover { background: var(--raised); }
+.ap-item.sel { background: rgba(0,212,255,.07); }
+.ap-item.sel::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--cyan); }
+.fr-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+  border: 1px solid rgba(255,255,255,.1); transition: all .3s;
+}
+.fr-VFR  { background: var(--vfr);  box-shadow: 0 0 6px var(--vfr); }
+.fr-MVFR { background: var(--mvfr); box-shadow: 0 0 6px var(--mvfr); }
+.fr-IFR  { background: var(--ifr);  box-shadow: 0 0 6px var(--ifr); }
+.fr-LIFR { background: var(--lifr); box-shadow: 0 0 6px var(--lifr); }
+.fr-UNK  { background: var(--t4); }
+.ap-meta { flex: 1; min-width: 0; }
+.ap-icao { font-family: var(--f-mono); font-size: 14px; font-weight: bold; letter-spacing: 1px; line-height: 1; }
+.ap-name { font-size: 10px; color: var(--t2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.ap-wx   { font-family: var(--f-mono); font-size: 10px; color: var(--t2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ap-time { font-family: var(--f-mono); font-size: 9px; color: var(--t3); margin-top: 1px; }
+.sb-footer { padding: 8px 12px; border-top: 1px solid var(--t4); }
+.fr-legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-bottom: 6px; }
+.fr-leg-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--t2); }
+.sb-credits { font-size: 9px; color: var(--t3); line-height: 1.5; }
+
+/* ═══════════ MAIN AREA ════════════════════════════════════ */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Active airport banner */
+.airport-banner {
+  background: var(--panel); border-bottom: 1px solid var(--line);
+  padding: 8px 16px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 0; overflow-x: auto;
+}
+.bn-icao-block { margin-right: 16px; }
+.bn-icao { font-family: var(--f-display); font-size: 30px; font-weight: 700; letter-spacing: 4px; color: var(--cyan); text-shadow: 0 0 20px rgba(0,212,255,.4); line-height: 1; }
+.bn-sub  { font-family: var(--f-ui); font-size: 11px; color: var(--t2); letter-spacing: .5px; margin-top: 2px; }
+.bn-divider { width: 1px; height: 36px; background: var(--line); flex-shrink: 0; margin: 0 16px; }
+.bn-field { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+.bn-label { font-family: var(--f-ui); font-size: 8px; font-weight: 700; letter-spacing: 2px; color: var(--t3); text-transform: uppercase; }
+.bn-value { font-family: var(--f-mono); font-size: 13px; }
+.frb { display: inline-block; padding: 2px 8px; border-radius: 2px; font-family: var(--f-display); font-size: 13px; font-weight: 700; letter-spacing: 2px; }
+.frb.VFR  { color: var(--vfr);  background: rgba(168,216,255,.1); border: 1px solid rgba(168,216,255,.3); }
+.frb.MVFR { color: var(--mvfr); background: rgba(77,159,255,.1);  border: 1px solid rgba(77,159,255,.3); }
+.frb.IFR  { color: var(--ifr);  background: rgba(255,68,68,.1);   border: 1px solid rgba(255,68,68,.3); }
+.frb.LIFR { color: var(--lifr); background: rgba(255,68,170,.1);  border: 1px solid rgba(255,68,170,.3); }
+.frb.UNK  { color: var(--t3);   background: rgba(22,50,86,.3);    border: 1px solid var(--t4); }
+
+/* ═══════════ GRID ══════════════════════════════════════════ */
+.grid {
+  flex: 1; min-height: 0; display: grid;
+  grid-template-columns: 340px 340px 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 2px; background: var(--void);
+}
+.cell {
+  background: var(--panel); display: flex; flex-direction: column;
+  min-height: 0; overflow: hidden;
+}
+.cell-map { grid-column: 3; grid-row: 1 / 3; }
+
+/* Cell header */
+.cell-hdr {
+  background: var(--ink); border-bottom: 1px solid var(--line);
+  padding: 0 12px; height: 34px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+}
+.cell-title {
+  font-family: var(--f-ui); font-size: 10px; font-weight: 700;
+  letter-spacing: 2.5px; color: var(--t2); text-transform: uppercase;
+}
+.cell-meta { font-family: var(--f-mono); font-size: 9px; color: var(--t3); }
+.cell-actions { display: flex; align-items: center; gap: 3px; }
+.cbtn {
+  height: 22px; padding: 0 7px;
+  background: transparent; border: 1px solid var(--t4); color: var(--t3);
+  font-family: var(--f-ui); font-size: 9px; font-weight: 600; letter-spacing: 1px;
+  cursor: pointer; border-radius: 2px; text-transform: uppercase; transition: all .15s; white-space: nowrap;
+}
+.cbtn:hover, .cbtn.on { background: rgba(0,212,255,.1); border-color: var(--cyan); color: var(--cyan); }
+
+/* Cell body */
+.cell-body { flex: 1; overflow-y: auto; padding: 10px 12px; min-height: 0; }
+
+/* ═══════════ STATUS BAR ════════════════════════════════════ */
+.statusbar {
+  height: var(--bar-h); flex-shrink: 0;
+  background: var(--void); border-top: 1px solid var(--t4);
+  display: flex; align-items: center; padding: 0 14px; gap: 16px;
+  font-family: var(--f-mono); font-size: 9px; color: var(--t3);
+}
+.st-item { display: flex; align-items: center; gap: 4px; }
+.st-ok   { color: var(--green); } .st-warn { color: var(--amber); } .st-err { color: var(--red); }
+
+/* ═══════════ CURRENT CONDITIONS ═══════════════════════════ */
+.obs-layout { display: grid; grid-template-rows: auto auto 1fr; gap: 8px; height: 100%; }
+
+/* Hero row: symbol + temp + sky */
+.obs-hero {
+  display: grid; grid-template-columns: 80px 1fr; gap: 0;
+  background: linear-gradient(135deg, rgba(0,212,255,.06) 0%, transparent 60%);
+  border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
+}
+.obs-symbol-col {
+  background: rgba(0,0,0,.3); border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 0;
+}
+.obs-icon { font-size: 38px; line-height: 1; filter: drop-shadow(0 0 8px rgba(0,212,255,.4)); }
+.obs-daynight { font-family: var(--f-ui); font-size: 9px; color: var(--t3); letter-spacing: 1px; }
+.obs-main { padding: 12px 14px; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.obs-temp-big { font-family: var(--f-display); font-size: 42px; font-weight: 700; line-height: 1; letter-spacing: 1px; }
+.obs-sky-txt  { font-family: var(--f-ui); font-size: 16px; font-weight: 600; color: var(--t2); letter-spacing: .5px; }
+.obs-wxcodes  { font-family: var(--f-mono); font-size: 11px; }
 
 /* Wind rose card */
-.wind-card{
-  background:rgba(0,0,0,.25);border:1px solid var(--bdr2);border-radius:4px;
-  padding:8px 10px;display:flex;align-items:center;gap:12px;grid-column:1/-1;
+.obs-wind {
+  display: grid; grid-template-columns: 90px 1fr; gap: 0;
+  border: 1px solid var(--line); border-radius: 4px; overflow: hidden;
 }
-.wind-rose-wrap{flex-shrink:0}
-.wind-rose-wrap svg{display:block}
-.wind-detail{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.wd-item{display:flex;flex-direction:column;gap:1px}
-.wd-lbl{font-family:var(--cond);font-size:clamp(7px,.75vw,9px);letter-spacing:1.5px;color:var(--txt3);text-transform:uppercase}
-.wd-val{font-family:var(--mono);font-size:clamp(13px,1.5vw,18px);font-weight:bold}
+.wind-rose-cell {
+  background: rgba(0,0,0,.3); border-right: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: center; padding: 8px;
+}
+.wind-data-cell { padding: 8px 12px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; align-content: center; }
+.wd-field { display: flex; flex-direction: column; gap: 2px; }
+.wd-lbl { font-family: var(--f-ui); font-size: 8px; font-weight: 600; letter-spacing: 2px; color: var(--t3); text-transform: uppercase; }
+.wd-val { font-family: var(--f-display); font-size: 16px; font-weight: 500; letter-spacing: 1px; }
+
+/* Stats tiles grid */
+.obs-tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
+.tile {
+  background: rgba(0,0,0,.25); border: 1px solid var(--line); border-radius: 4px;
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 3px;
+  transition: border-color .15s;
+}
+.tile:hover { border-color: var(--mute); }
+.tile-lbl { font-family: var(--f-ui); font-size: 8px; font-weight: 700; letter-spacing: 2px; color: var(--t3); text-transform: uppercase; }
+.tile-val { font-family: var(--f-display); font-size: 18px; font-weight: 500; letter-spacing: 1px; line-height: 1; }
+.tile-sub { font-family: var(--f-mono); font-size: 9px; color: var(--t3); }
+/* tile colors */
+.c-temp  { color: #ff6d4a; }
+.c-dew   { color: #40c4ff; }
+.c-hum   { color: var(--green); }
+.c-vis   { color: var(--vfr); }
+.c-ceil  { color: var(--cyan); }
+.c-alt   { color: var(--amber); }
+.c-spread{ color: #ff9e40; }
 
 /* Raw METAR */
-.raw{
-  font-family:var(--mono);font-size:clamp(9px,1vw,11px);line-height:1.8;word-break:break-all;
-  white-space:pre-wrap;padding:8px 10px;background:rgba(0,0,0,.3);
-  border:1px solid var(--bdr);border-radius:4px;margin-top:8px;
+.raw-metar {
+  font-family: var(--f-mono); font-size: 11px; line-height: 1.9; word-break: break-all; white-space: pre-wrap;
+  padding: 8px 10px; background: rgba(0,0,0,.3); border: 1px solid var(--t4); border-radius: 3px;
 }
 
-/* ══ HISTORY TABS ════════════════════════════════════════ */
-.htab{
-  background:transparent;border:1px solid var(--bdr);color:var(--txt3);
-  padding:2px 7px;font-family:var(--cond);font-size:clamp(9px,.9vw,11px);letter-spacing:1px;
-  cursor:pointer;border-radius:3px;transition:all .2s;
-}
-.htab:hover{border-color:var(--bdr3);color:var(--txt2)}
-.htab.active{background:rgba(0,229,255,.1);border-color:var(--cyan);color:var(--cyan)}
+/* Color codes */
+.c-VFR  { color: var(--vfr); }  .c-MVFR { color: var(--mvfr); }
+.c-IFR  { color: var(--ifr); }  .c-LIFR { color: var(--lifr); }
+.cc-VFR { color: var(--vfr); }  .cc-MVFR{ color: var(--mvfr); }
+.cc-IFR { color: var(--ifr); }  .cc-LIFR{ color: var(--lifr); }
+.wx-hi  { background: rgba(255,193,7,.15); color: var(--amber); border-radius: 2px; padding: 0 2px; }
 
-/* ══ HISTORY TABLE ═══════════════════════════════════════ */
-.hist-hdr,.hist-row{
-  display:grid;grid-template-columns:72px 52px 80px 60px 1fr;
-  gap:4px;padding:3px 6px;font-family:var(--mono);font-size:clamp(9px,.9vw,11px);
-  align-items:center;
+/* ═══════════ HISTORY / CHARTS ══════════════════════════════ */
+.htabs { display: flex; gap: 2px; }
+.htab {
+  height: 22px; padding: 0 7px;
+  background: transparent; border: 1px solid var(--t4); color: var(--t3);
+  font-family: var(--f-ui); font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; border-radius: 2px; text-transform: uppercase; transition: all .15s;
 }
-.hist-hdr{font-family:var(--cond);font-size:clamp(7px,.75vw,9px);color:var(--txt3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--bdr)}
-.hist-row{border-bottom:1px solid rgba(22,32,53,.5)}
-.hist-row:hover{background:rgba(255,255,255,.02)}
+.htab:hover { border-color: var(--mute); color: var(--t2); }
+.htab.on { background: rgba(0,212,255,.1); border-color: var(--cyan); color: var(--cyan); }
 
-/* ══ CHARTS ══════════════════════════════════════════════ */
-.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0}
-.chart-card{background:rgba(0,0,0,.25);border:1px solid var(--bdr);border-radius:4px;padding:8px 10px}
-.chart-lbl{font-family:var(--cond);font-size:clamp(8px,.8vw,10px);letter-spacing:1.5px;color:var(--txt2);text-transform:uppercase;margin-bottom:4px}
-.chart-canvas-wrap{height:clamp(60px,6vh,90px);position:relative}
+/* Charts section */
+.charts-area { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 8px; }
+.chart-card {
+  background: rgba(0,0,0,.28); border: 1px solid var(--line); border-radius: 3px; padding: 7px 8px;
+}
+.chart-title { font-family: var(--f-ui); font-size: 9px; font-weight: 700; letter-spacing: 2px; color: var(--t2); text-transform: uppercase; margin-bottom: 4px; }
+.chart-wrap { position: relative; height: 80px; }
+.chart-wrap canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
 
-/* ══ TAF ═════════════════════════════════════════════════ */
-.taf-raw-block{
-  font-family:var(--mono);font-size:clamp(9px,1vw,12px);line-height:2;
-  white-space:pre;background:rgba(0,0,0,.3);border:1px solid var(--bdr);
-  border-radius:4px;padding:10px 12px;overflow-x:auto;
-}
+/* History table */
+.hist-tbl { width: 100%; border-collapse: collapse; font-family: var(--f-mono); font-size: 10px; }
+.hist-tbl th { font-family: var(--f-ui); font-size: 8px; font-weight: 700; letter-spacing: 2px; color: var(--t3); text-transform: uppercase; padding: 4px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+.hist-tbl td { padding: 3px 6px; border-bottom: 1px solid rgba(22,50,86,.4); vertical-align: top; }
+.hist-tbl tr:hover td { background: rgba(255,255,255,.02); }
 
-/* ══ CROSSWIND ═══════════════════════════════════════════ */
-.xtab{
-  background:transparent;border:1px solid var(--bdr);color:var(--txt3);
-  padding:2px 6px;font-family:var(--cond);font-size:clamp(8px,.8vw,10px);letter-spacing:1px;
-  cursor:pointer;border-radius:3px;transition:all .2s;
-}
-.xtab:hover{border-color:var(--bdr3);color:var(--txt2)}
-.xtab.active{background:rgba(0,229,255,.1);border-color:var(--cyan);color:var(--cyan)}
-.rwy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
-.rwy-card{background:rgba(0,0,0,.28);border:1px solid var(--bdr2);border-radius:4px;padding:8px 10px}
-.rwy-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.rwy-name{font-family:var(--cond);font-size:clamp(13px,1.4vw,17px);font-weight:700;letter-spacing:2px}
-.rwy-len{font-family:var(--mono);font-size:clamp(8px,.8vw,10px);color:var(--txt3)}
-.rwy-body{display:flex;gap:8px;align-items:center}
-.xbars{flex:1}
-.xbar-row{display:flex;align-items:center;gap:5px;margin-bottom:4px}
-.xbar-lbl{font-family:var(--cond);font-size:clamp(7px,.75vw,9px);color:var(--txt3);width:22px;text-align:right;flex-shrink:0}
-.xbar-track{flex:1;height:7px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden}
-.xbar-fill{height:100%;border-radius:4px;transition:width .5s}
-.xf-hw{background:var(--green)}.xf-xw{background:var(--wx)}.xf-tw{background:var(--ifr)}
-.xf-xwx{background:var(--ifr)}
-.xbar-val{font-family:var(--mono);font-size:clamp(10px,1vw,12px);width:38px;text-align:right;flex-shrink:0}
-.xw-ok{color:var(--green)}.xw-cau{color:var(--wx)}.xw-bad{color:var(--ifr)}
-.xwind-src{font-family:var(--mono);font-size:clamp(8px,.8vw,10px);color:var(--txt3);margin-bottom:6px;padding:3px 7px;background:rgba(0,0,0,.2);border-radius:3px;display:inline-block}
-
-/* ══ MAP ═════════════════════════════════════════════════ */
-.map-wrap{position:relative;flex:1;min-height:0}
-#map{position:absolute;inset:0;width:100%;height:100%}
-.mbtns{position:absolute;top:8px;right:8px;z-index:10;display:flex;flex-direction:column;gap:4px}
-.mbtn{
-  background:rgba(6,13,24,.92);border:1px solid var(--bdr2);color:var(--txt2);
-  padding:5px 10px;font-family:var(--cond);font-size:clamp(9px,.9vw,11px);letter-spacing:1px;
-  cursor:pointer;border-radius:3px;transition:all .2s;white-space:nowrap;backdrop-filter:blur(4px);
-}
-.mbtn:hover,.mbtn.on{background:rgba(0,229,255,.14);border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 8px rgba(0,229,255,.2)}
-.mleg{
-  position:absolute;bottom:24px;left:8px;z-index:10;
-  background:rgba(6,13,24,.88);border:1px solid var(--bdr2);border-radius:4px;
-  padding:6px 9px;font-family:var(--cond);font-size:clamp(8px,.8vw,10px);color:var(--txt2);
-  backdrop-filter:blur(4px);
-}
-.mleg div{display:flex;align-items:center;gap:6px;padding:2px 0}
-.sw{display:inline-block;width:20px;height:2px}
-.ltg-card{
-  position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:10;
-  background:rgba(6,13,24,.92);border:1px solid var(--bdr2);border-radius:4px;
-  padding:6px 14px;font-family:var(--cond);font-size:clamp(9px,.9vw,11px);
-  text-align:center;letter-spacing:1px;display:none;pointer-events:none;
-  backdrop-filter:blur(4px);
+/* ═══════════ TAF ═══════════════════════════════════════════ */
+.taf-raw {
+  font-family: var(--f-mono); font-size: 11px; line-height: 2;
+  white-space: pre; background: rgba(0,0,0,.3); border: 1px solid var(--t4);
+  border-radius: 3px; padding: 10px 12px; overflow-x: auto;
 }
 
-/* ══ STATUS BAR ══════════════════════════════════════════ */
-.statusbar{
-  background:var(--bg2);border-top:1px solid var(--bdr);height:22px;
-  display:flex;align-items:center;gap:14px;padding:0 14px;flex-shrink:0;
-  font-family:var(--mono);font-size:clamp(8px,.8vw,10px);color:var(--txt3);
+/* ═══════════ CROSSWIND ═════════════════════════════════════ */
+.xw-src { font-family: var(--f-mono); font-size: 9px; color: var(--t3); padding: 3px 7px; background: rgba(0,0,0,.2); border-radius: 2px; display: inline-block; margin-bottom: 8px; }
+.xtabs { display: flex; gap: 2px; flex-wrap: wrap; }
+.xtab {
+  height: 22px; padding: 0 7px;
+  background: transparent; border: 1px solid var(--t4); color: var(--t3);
+  font-family: var(--f-ui); font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; border-radius: 2px; text-transform: uppercase; transition: all .15s;
 }
-.si{display:flex;align-items:center;gap:4px}
-.st-ok{color:var(--green)}.st-warn{color:var(--wx)}.st-err{color:var(--ifr)}
-
-/* ══ LOADING / ERROR ═════════════════════════════════════ */
-.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--txt3);font-family:var(--cond);font-size:clamp(10px,1vw,12px);letter-spacing:1px}
-.spin{width:24px;height:24px;border:2px solid var(--bdr2);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.errbox{color:var(--ifr);font-family:var(--cond);font-size:clamp(10px,1vw,12px);padding:10px;line-height:1.6;border:1px solid rgba(239,83,80,.25);border-radius:4px;background:rgba(239,83,80,.06)}
-
-/* Responsive: collapse to 2-col at narrow screens */
-@media(max-width:1100px){
-  .panels{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr 1fr}
-  .pmap{grid-column:1/-1;grid-row:3;min-height:300px}
+.xtab:hover { border-color: var(--mute); color: var(--t2); }
+.xtab.on { background: rgba(0,212,255,.1); border-color: var(--cyan); color: var(--cyan); }
+.rwy-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.rwy-card {
+  background: rgba(0,0,0,.28); border: 1px solid var(--line); border-radius: 4px;
+  padding: 9px 10px;
 }
-@media(max-width:700px){
-  .panels{grid-template-columns:1fr;grid-template-rows:auto}
-  .pmap{grid-column:1;grid-row:4;min-height:280px}
-  aside{width:140px}
+.rwy-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.rwy-id   { font-family: var(--f-display); font-size: 15px; font-weight: 600; letter-spacing: 2px; }
+.rwy-dim  { font-family: var(--f-mono); font-size: 9px; color: var(--t3); }
+.rwy-body { display: flex; gap: 8px; align-items: center; }
+.xbars    { flex: 1; }
+.xbar     { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+.xbar-lbl { font-family: var(--f-ui); font-size: 8px; font-weight: 700; color: var(--t3); width: 20px; text-align: right; flex-shrink: 0; letter-spacing: .5px; text-transform: uppercase; }
+.xbar-track { flex: 1; height: 7px; background: rgba(255,255,255,.05); border-radius: 4px; overflow: hidden; }
+.xbar-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+.xf-hw { background: linear-gradient(90deg, var(--green), #00c97d); }
+.xf-tw { background: linear-gradient(90deg, var(--red), #cc2244); }
+.xf-xw { background: linear-gradient(90deg, var(--amber), #e5a000); }
+.xf-xwbad { background: linear-gradient(90deg, var(--red), #cc2244); }
+.xbar-num { font-family: var(--f-mono); font-size: 10px; width: 36px; text-align: right; flex-shrink: 0; }
+.xw-ok  { color: var(--green); } .xw-cau { color: var(--amber); } .xw-bad { color: var(--red); }
+.rwy-end-label {
+  font-family: var(--f-ui); font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--t2); margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(30,64,112,.6);
+  display: flex; align-items: center; gap: 5px;
+}
+.rwy-pref { font-size: 8px; color: var(--cyan); letter-spacing: .5px; }
+
+/* ═══════════ MAP ═══════════════════════════════════════════ */
+.map-wrap   { position: relative; flex: 1; min-height: 0; }
+#map        { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map-controls {
+  position: absolute; top: 8px; right: 8px; z-index: 10;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.map-legend {
+  position: absolute; bottom: 26px; left: 8px; z-index: 10;
+  background: rgba(2,8,16,.88); border: 1px solid var(--line); border-radius: 3px;
+  padding: 6px 9px; font-family: var(--f-ui); font-size: 10px; color: var(--t2);
+  backdrop-filter: blur(6px);
+}
+.map-legend-row { display: flex; align-items: center; gap: 7px; padding: 2px 0; }
+.legend-line { display: inline-block; width: 22px; height: 2px; }
+.ltg-overlay {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%); z-index: 10;
+  background: rgba(2,8,16,.92); border: 1px solid var(--line); border-radius: 4px;
+  padding: 6px 16px; font-family: var(--f-ui); font-size: 10px; text-align: center;
+  letter-spacing: 1px; display: none; pointer-events: none; backdrop-filter: blur(6px);
+}
+
+/* ═══════════ UTILITY ════════════════════════════════════════ */
+.loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 10px; color: var(--t3); }
+.spinner { width: 26px; height: 26px; border: 2px solid var(--line); border-top-color: var(--cyan); border-radius: 50%; animation: spin .9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.errbox { color: var(--red); font-family: var(--f-ui); font-size: 12px; padding: 10px; line-height: 1.7; border: 1px solid rgba(255,59,92,.25); border-radius: 4px; background: rgba(255,59,92,.06); letter-spacing: .5px; }
+.empty { font-family: var(--f-ui); font-size: 11px; color: var(--t3); text-align: center; padding: 16px; letter-spacing: 1px; text-transform: uppercase; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .grid { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 320px; }
+  .cell-map { grid-column: 1 / -1; grid-row: 3; }
+}
+@media (max-width: 760px) {
+  :root { --sb-w: 150px; }
+  .grid { grid-template-columns: 1fr; grid-template-rows: auto; }
+  .cell-map { grid-column: 1; grid-row: auto; min-height: 260px; }
+  .hdr-clocks .clock:last-child { display: none; }
 }
 </style>
 </head>
 <body>
+
+<!-- ═══════════ HEADER ═══════════════════════════════════════ -->
 <header>
-  <div class="logo">
-    <div class="logo-mark">✈</div>
-    <div class="logo-txt">AVI<span>MET</span></div>
+  <div class="hdr-brand">
+    <div class="brand-icon"></div>
+    <div class="brand-name">AVI<em>MET</em></div>
   </div>
   <div class="hdr-clocks">
-    <div class="clk"><span class="clk-lbl">ZULU</span><span class="clk-val z" id="utc-clk">--:--:-- Z</span></div>
-    <div class="clk"><span class="clk-lbl" id="local-lbl">LOCAL</span><span class="clk-val l" id="local-clk">--:--:--</span></div>
+    <div class="clock">
+      <span class="clk-label">Zulu UTC</span>
+      <span class="clk-time zulu" id="clk-z">--:--:-- Z</span>
+    </div>
+    <div class="clock">
+      <span class="clk-label" id="clk-local-lbl">Local</span>
+      <span class="clk-time local" id="clk-l">--:--:--</span>
+    </div>
   </div>
-  <div class="hdr-mid">
+  <div class="hdr-status">
     <div class="pulse"></div>
-    <span id="lbl-upd">CONNECTING…</span>
+    <span id="hdr-upd">CONNECTING</span>
   </div>
-  <div class="hdr-rt">
-    <button class="btn btn-tog active" id="tog-f" onclick="setUnit('F')">°F</button>
-    <button class="btn btn-tog" id="tog-c" onclick="setUnit('C')">°C</button>
-    <button class="btn" onclick="loadAll()">↻ REFRESH</button>
+  <div class="hdr-controls">
+    <div class="unit-tog">
+      <button class="hbtn active" id="btn-f" onclick="setUnit('F')">°F</button>
+      <button class="hbtn" id="btn-c" onclick="setUnit('C')">°C</button>
+    </div>
+    <button class="hbtn" onclick="loadAll()">↻ REFRESH</button>
   </div>
 </header>
 
-<div class="wrap">
-  <aside>
-    <div class="sb-hdr">My Desk</div>
-    <div id="ap-list"></div>
-    <div class="sb-leg">
-      <div class="leg-ttl">Flight Rules</div>
-      <div class="leg-r"><span class="fdot fd-VFR" style="margin-top:0"></span>VFR</div>
-      <div class="leg-r"><span class="fdot fd-MVFR" style="margin-top:0"></span>MVFR</div>
-      <div class="leg-r"><span class="fdot fd-IFR"  style="margin-top:0"></span>IFR</div>
-      <div class="leg-r"><span class="fdot fd-LIFR" style="margin-top:0"></span>LIFR</div>
-      <div class="leg-r" style="margin-top:5px"><span class="wxbox"></span>Sig Wx</div>
-    </div>
-    <div class="sb-ft">CheckWX · Iowa Mesonet<br>NEXRAD · Open-Meteo</div>
-  </aside>
+<!-- ═══════════ BODY ══════════════════════════════════════════ -->
+<div class="body">
 
-  <div class="content">
-    <div class="banner">
-      <div><div class="bn-icao" id="bn-icao">KCLT</div><div class="bn-sub"><div class="bn-name" id="bn-name">Charlotte Douglas International</div><div class="bn-coord" id="bn-coord">35.2141°N 80.9431°W · ELEV 748 ft</div></div></div>
-      <div class="bn-div"></div>
-      <div class="bn-st"><div class="bn-lbl">Category</div><div class="bn-val"><span class="frb frb-UNK" id="bn-fr">—</span></div></div>
-      <div class="bn-div"></div>
-      <div class="bn-st"><div class="bn-lbl">Wind</div><div class="bn-val" id="bn-wind">—</div></div>
-      <div class="bn-div"></div>
-      <div class="bn-st"><div class="bn-lbl">Visibility</div><div class="bn-val" id="bn-vis">—</div></div>
-      <div class="bn-div"></div>
-      <div class="bn-st"><div class="bn-lbl">Ceiling</div><div class="bn-val" id="bn-ceil">—</div></div>
-      <div class="bn-div"></div>
-      <div class="bn-st"><div class="bn-lbl">Temp/Dew</div><div class="bn-val" id="bn-temp">—</div></div>
-      <div class="bn-div"></div>
-      <div class="bn-st"><div class="bn-lbl">Altimeter</div><div class="bn-val" id="bn-alt">—</div></div>
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sb-section-title">Desk Airports</div>
+    <div class="ap-list" id="ap-list"></div>
+    <div class="sb-footer">
+      <div class="fr-legend">
+        <div class="fr-leg-item"><span class="fr-dot fr-VFR" style="margin:0"></span>VFR</div>
+        <div class="fr-leg-item"><span class="fr-dot fr-MVFR" style="margin:0"></span>MVFR</div>
+        <div class="fr-leg-item"><span class="fr-dot fr-IFR"  style="margin:0"></span>IFR</div>
+        <div class="fr-leg-item"><span class="fr-dot fr-LIFR" style="margin:0"></span>LIFR</div>
+      </div>
+      <div class="sb-credits">CheckWX · IEM ASOS<br>NEXRAD · Open-Meteo · 5min</div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- BANNER -->
+    <div class="airport-banner">
+      <div class="bn-icao-block">
+        <div class="bn-icao" id="bn-icao">KCLT</div>
+        <div class="bn-sub" id="bn-sub">Charlotte Douglas International</div>
+      </div>
+      <div class="bn-divider"></div>
+      <div class="bn-field"><div class="bn-label">Category</div><div class="bn-value"><span class="frb UNK" id="bn-fr">—</span></div></div>
+      <div class="bn-divider"></div>
+      <div class="bn-field"><div class="bn-label">Wind</div><div class="bn-value" id="bn-wind" style="font-family:var(--f-display);font-size:13px">—</div></div>
+      <div class="bn-divider"></div>
+      <div class="bn-field"><div class="bn-label">Visibility</div><div class="bn-value" id="bn-vis">—</div></div>
+      <div class="bn-divider"></div>
+      <div class="bn-field"><div class="bn-label">Ceiling</div><div class="bn-value" id="bn-ceil">—</div></div>
+      <div class="bn-divider"></div>
+      <div class="bn-field"><div class="bn-label">Temp / Dew</div><div class="bn-value" id="bn-td">—</div></div>
+      <div class="bn-divider"></div>
+      <div class="bn-field"><div class="bn-label">Altimeter</div><div class="bn-value" id="bn-alt">—</div></div>
     </div>
 
-    <div class="panels">
-      <!-- ── METAR / CONDITIONS ── -->
-      <div class="panel">
-        <div class="ph">
-          <span class="ph-tt">Current Conditions</span>
-          <div class="ph-rt">
-            <div style="display:flex;gap:2px" id="hist-tabs">
-              <button class="htab active" onclick="setHours(0,this)">NOW</button>
-              <button class="htab" onclick="setHours(3,this)">3H</button>
-              <button class="htab" onclick="setHours(6,this)">6H</button>
-              <button class="htab" onclick="setHours(12,this)">12H</button>
-              <button class="htab" onclick="setHours(24,this)">24H</button>
-              <button class="htab" onclick="setHours(48,this)">48H</button>
+    <!-- PANEL GRID -->
+    <div class="grid">
+
+      <!-- ── CELL 1: Current Conditions ── -->
+      <div class="cell">
+        <div class="cell-hdr">
+          <span class="cell-title">Current Conditions</span>
+          <div class="cell-actions">
+            <div class="htabs" id="htabs">
+              <button class="htab on" onclick="setHours(0,this)">NOW</button>
+              <button class="htab"    onclick="setHours(3,this)">3H</button>
+              <button class="htab"    onclick="setHours(6,this)">6H</button>
+              <button class="htab"    onclick="setHours(12,this)">12H</button>
+              <button class="htab"    onclick="setHours(24,this)">24H</button>
+              <button class="htab"    onclick="setHours(48,this)">48H</button>
             </div>
-            <span class="ph-tg" id="t-obs">—</span>
+            <span class="cell-meta" id="obs-time" style="margin-left:6px">—</span>
           </div>
         </div>
-        <div class="pb" id="p-metar"><div class="loading"><div class="spin"></div><span>LOADING…</span></div></div>
+        <div class="cell-body" id="cell-obs">
+          <div class="loading"><div class="spinner"></div><span style="font-family:var(--f-ui);font-size:10px;letter-spacing:2px">LOADING</span></div>
+        </div>
       </div>
 
-      <!-- ── MAP ── -->
-      <div class="panel pmap">
-        <div class="ph">
-          <span class="ph-tt">RADAR — NEXRAD Composite</span>
-          <div class="ph-rt">
-            <button class="mbtn on" id="mb-radar" onclick="toggleRadar()" style="position:static;padding:3px 7px;font-size:clamp(8px,.8vw,10px)">⬛ RADAR</button>
-            <button class="mbtn" id="mb-ltg" onclick="toggleLtg()" style="position:static;padding:3px 7px;font-size:clamp(8px,.8vw,10px)">⚡ LTG</button>
-            <button class="mbtn" onclick="mapTour()" style="position:static;padding:3px 7px;font-size:clamp(8px,.8vw,10px)" id="mb-tour">◎ TOUR</button>
-            <button class="mbtn" onclick="resetView()" style="position:static;padding:3px 7px;font-size:clamp(8px,.8vw,10px)">⌖ CTR</button>
+      <!-- ── CELL 3: MAP (spans both rows) ── -->
+      <div class="cell cell-map">
+        <div class="cell-hdr">
+          <span class="cell-title">NEXRAD Radar</span>
+          <div class="cell-actions">
+            <button class="cbtn on" id="btn-radar" onclick="toggleRadar()">⬛ RADAR</button>
+            <button class="cbtn" id="btn-ltg" onclick="toggleLtg()">⚡ LTG</button>
+            <button class="cbtn" id="btn-tour" onclick="mapTour()">◎ TOUR</button>
+            <button class="cbtn" onclick="resetView()">⌖ CTR</button>
           </div>
         </div>
         <div class="map-wrap">
           <div id="map"></div>
-          <div class="ltg-card" id="ltg-card"></div>
-          <div class="mleg">
-            <div><span class="sw" style="background:#ef4444"></span>5 NM</div>
-            <div><span class="sw" style="border-top:2px dashed #eab308"></span>10 NM</div>
-            <div><span class="sw" style="border-top:2px dashed #22c55e"></span>25 NM</div>
+          <div class="ltg-overlay" id="ltg-card"></div>
+          <div class="map-legend">
+            <div class="map-legend-row"><span class="legend-line" style="background:#ef4444"></span>5 NM</div>
+            <div class="map-legend-row"><span class="legend-line" style="border-top:2px dashed #eab308"></span>10 NM</div>
+            <div class="map-legend-row"><span class="legend-line" style="border-top:2px dashed #22c55e"></span>25 NM</div>
           </div>
         </div>
       </div>
 
-      <!-- ── TAF ── -->
-      <div class="panel">
-        <div class="ph">
-          <span class="ph-tt">TAF — Forecast</span>
-          <span class="ph-tg" id="t-taf">—</span>
+      <!-- ── CELL 2: TAF ── -->
+      <div class="cell">
+        <div class="cell-hdr">
+          <span class="cell-title">TAF — Forecast</span>
+          <span class="cell-meta" id="taf-valid">—</span>
         </div>
-        <div class="pb" id="p-taf"><div class="loading"><div class="spin"></div><span>LOADING…</span></div></div>
+        <div class="cell-body" id="cell-taf">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
       </div>
 
-      <!-- ── CROSSWIND ── -->
-      <div class="panel">
-        <div class="ph">
-          <span class="ph-tt">Crosswind Calculator</span>
-          <div class="ph-rt" id="xwind-tabs-hdr">
-            <button class="xtab active" id="xtab-obs" onclick="xwindSetSource('obs',this)">OBS</button>
-            <span id="xwind-taf-tabs" style="display:contents"></span>
+      <!-- ── CELL 4: Crosswind ── -->
+      <div class="cell">
+        <div class="cell-hdr">
+          <span class="cell-title">Crosswind Calc</span>
+          <div class="cell-actions xtabs" id="xtabs">
+            <button class="xtab on" id="xt-obs" onclick="xSrc('obs',this)">OBS</button>
+            <span id="xt-taf-tabs" style="display:contents"></span>
           </div>
         </div>
-        <div class="pb" id="p-xwind"><div class="loading"><div class="spin"></div><span>LOADING RUNWAYS…</span></div></div>
+        <div class="cell-body" id="cell-xw">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
       </div>
-    </div>
 
+    </div><!-- /grid -->
+
+    <!-- STATUS BAR -->
     <div class="statusbar">
-      <div class="si">CheckWX <span id="s-cwx" class="st-warn">—</span></div>
-      <div class="si">IEM <span id="s-iem" class="st-warn">—</span></div>
-      <div class="si">RADAR <span id="s-radar" class="st-warn">—</span></div>
-      <div class="si">LTG <span id="s-ltg">—</span></div>
-      <div class="si" style="margin-left:auto;color:var(--txt3)">checkwxapi.com · mesonet.agron.iastate.edu · open-meteo.com</div>
+      <div class="st-item">CWX <span id="st-cwx" class="st-warn">—</span></div>
+      <div class="st-item">IEM <span id="st-iem" class="st-warn">—</span></div>
+      <div class="st-item">RADAR <span id="st-radar" class="st-warn">—</span></div>
+      <div class="st-item">LTG <span id="st-ltg">—</span></div>
+      <div style="margin-left:auto">checkwxapi.com · mesonet.agron.iastate.edu · open-meteo.com</div>
     </div>
-  </div>
-</div>
+
+  </div><!-- /main -->
+</div><!-- /body -->
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════════════════════
-const AIRPORTS = [
+/* ═══════════════════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════════════════ */
+const AIRPORTS=[
   {icao:'KCLT',name:'Charlotte Douglas',    lat:35.2141,lon:-80.9431,tz:'America/New_York'},
   {icao:'KRDU',name:'Raleigh-Durham',        lat:35.8776,lon:-78.7875,tz:'America/New_York'},
   {icao:'KCAE',name:'Columbia Metro',        lat:33.9388,lon:-81.1195,tz:'America/New_York'},
@@ -474,853 +584,842 @@ const AIRPORTS = [
   {icao:'KGSO',name:'Piedmont Triad',        lat:36.0978,lon:-79.9373,tz:'America/New_York'},
   {icao:'KCMH',name:'Columbus Ohio',         lat:39.9980,lon:-82.8919,tz:'America/New_York'},
 ];
-const API_KEY   = '97ee6acd0cdc42dd9d443efe7235e464';
-const CWX_BASE  = 'https://api.checkwx.com';
-const IEM_BASE  = 'https://mesonet.agron.iastate.edu/api/1';
+const API_KEY='97ee6acd0cdc42dd9d443efe7235e464';
+const CWX='https://api.checkwx.com';
 
-let cur = AIRPORTS[0];
-let tempUnit = 'F';   // 'F' or 'C'
-let map, apMarkers = {};
-let radarOn = true, ltgOn = false;
-let histHours = 0;
-let xwindSource = 'obs', xwindSourceData = null, curRunways = [], curTafPeriods = [];
-let runwayCache = {};
-let tourActive = false, tourIdx = 0, tourTimer;
-let chartInstances = {};   // keyed by canvas id
+let cur=AIRPORTS[0], unit='F';
+let map, markers={}, radarOn=true, ltgOn=false;
+let histHours=0, lastObs=null;
+let runCache={}, rwyCache={}, curRwys=[], curTafPeriods=[], xSrcData=null;
+let tourOn=false, tourIdx=0, tourTmr;
+let charts={};
 
-// ═══════════════════════════════════════════════════════════════════
-// TEMPERATURE UNIT
-// ═══════════════════════════════════════════════════════════════════
+/* ═══════════ UTILS ════════════════════════════════════════ */
+const toF=c=>c!=null?+(c*9/5+32).toFixed(1):null;
+const toC=f=>f!=null?+((f-32)*5/9).toFixed(1):null;
+function dispT(c){ if(c==null) return '—'; return unit==='F'?`${toF(c)}°F`:`${c}°C`; }
+function dispTNum(c){ if(c==null) return '—'; return unit==='F'?`${toF(c)}°`:`${c}°`; }
 function setUnit(u){
-  tempUnit=u;
-  document.getElementById('tog-f').classList.toggle('active',u==='F');
-  document.getElementById('tog-c').classList.toggle('active',u==='C');
-  // Re-render current conditions if we have data
-  if(lastMetarData) renderMetarCurrent(lastMetarData);
-}
-let lastMetarData=null;
-
-function c2f(c){return c!=null?+(c*9/5+32).toFixed(1):null}
-function dispTemp(c){
-  if(c==null) return '—';
-  return tempUnit==='F'?`${c2f(c)}°F`:`${c}°C`;
-}
-function dispTempNum(c){
-  if(c==null) return '—';
-  return tempUnit==='F'?`${c2f(c)}°`:`${c}°`;
+  unit=u;
+  document.getElementById('btn-f').classList.toggle('active',u==='F');
+  document.getElementById('btn-c').classList.toggle('active',u==='C');
+  if(lastObs) renderObs(lastObs);
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// CLOCKS
-// ═══════════════════════════════════════════════════════════════════
-function tickClock(){
-  const n=new Date();
-  document.getElementById('utc-clk').textContent=
-    [n.getUTCHours(),n.getUTCMinutes(),n.getUTCSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+' Z';
-  try{
-    const loc=n.toLocaleTimeString('en-US',{timeZone:cur.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
-    document.getElementById('local-clk').textContent=loc;
-    document.getElementById('local-lbl').textContent=(cur.tz.split('/')[1]||'LOCAL').replace('_',' ');
-  }catch(e){}
-}
-setInterval(tickClock,1000); tickClock();
-
-function localHHMM(tz){
-  try{return new Date().toLocaleTimeString('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false});}
-  catch(e){return '--:--';}
-}
-setInterval(()=>{AIRPORTS.forEach(a=>{const el=document.getElementById('aploc-'+a.icao);if(el)el.textContent=localHHMM(a.tz)+' L';});},60000);
-
-// ═══════════════════════════════════════════════════════════════════
-// FLIGHT RULES / HELPERS
-// ═══════════════════════════════════════════════════════════════════
-function flightRules(vis,ceil){
+function frFromVis(vis,ceil){
   const v=vis??9999,c=ceil??99999;
-  if(v<1||c<500)  return 'LIFR';
+  if(v<1||c<500) return 'LIFR';
   if(v<3||c<1000) return 'IFR';
-  if(v<=5||c<=3000)return 'MVFR';
+  if(v<=5||c<=3000) return 'MVFR';
   return 'VFR';
 }
-const frKey=fr=>({'VFR':'VFR','MVFR':'MVFR','IFR':'IFR','LIFR':'LIFR'}[fr]||'UNK');
-const ceilFrKey=ft=>ft<500?'LIFR':ft<1000?'IFR':ft<=3000?'MVFR':'VFR';
+const frKey=fr=>({VFR:'VFR',MVFR:'MVFR',IFR:'IFR',LIFR:'LIFR'}[fr]||'UNK');
+const ceilFr=ft=>ft<500?'LIFR':ft<1000?'IFR':ft<=3000?'MVFR':'VFR';
 
-function isDaytime(tz){
-  try{const h=parseInt(new Date().toLocaleTimeString('en-US',{timeZone:tz,hour:'2-digit',hour12:false}));return h>=6&&h<20;}
-  catch(e){return true;}
-}
-function fmtTime(iso){
+function fmtZ(iso){
   try{const d=new Date(iso);return `${String(d.getUTCDate()).padStart(2,'0')}d ${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}Z`;}
   catch(e){return iso||'—';}
 }
-function hexToRgb(hex){
-  return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)].join(',');
+function isDaytime(tz){
+  try{const h=+new Date().toLocaleTimeString('en-US',{timeZone:tz,hour:'2-digit',hour12:false});return h>=6&&h<20;}catch(e){return true;}
+}
+function localHM(tz){
+  try{return new Date().toLocaleTimeString('en-US',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false});}catch(e){return '--:--';}
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// COLORIZER
-// ═══════════════════════════════════════════════════════════════════
-const WX_CODES=new Set(['BR','FG','FU','VA','DU','SA','HZ','PY','PO','SQ','FC','SS','DS',
-  'RA','SN','DZ','GR','GS','SG','IC','PL','UP','TS','TSRA','TSRAGR','RASN','SNRA',
-  'FZRA','FZDZ','FZFG','BCFG','BLSN','DRSN','DRSA','MIFG','PRFG','+RA','-RA',
-  '+SN','-SN','+DZ','-DZ','+TSRA','-TSRA','+RASN','-RASN','+TS','-TS']);
-function isWxTok(t){
-  if(WX_CODES.has(t)) return true;
-  const s=t.replace(/^[+-]/,'').replace(/^(MI|BC|PR|DR|BL|SH|TS|FZ|VC)/,'');
-  return WX_CODES.has(s)||WX_CODES.has(t.replace(/^[+-]/,''));
+/* ═══════════ CLOCK ════════════════════════════════════════ */
+function tickClock(){
+  const n=new Date();
+  document.getElementById('clk-z').textContent=[n.getUTCHours(),n.getUTCMinutes(),n.getUTCSeconds()].map(x=>String(x).padStart(2,'0')).join(':')+' Z';
+  try{
+    document.getElementById('clk-l').textContent=n.toLocaleTimeString('en-US',{timeZone:cur.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    document.getElementById('clk-local-lbl').textContent=(cur.tz.split('/')[1]||'Local').replace('_',' ');
+  }catch(e){}
 }
+setInterval(tickClock,1000); tickClock();
+setInterval(()=>AIRPORTS.forEach(a=>{const el=document.getElementById('ap-time-'+a.icao);if(el)el.textContent=localHM(a.tz)+' L';}),60000);
+
+/* ═══════════ COLORIZE RAW METAR ═══════════════════════════ */
+const WXSET=new Set(['BR','FG','FU','VA','DU','SA','HZ','PO','SQ','FC','SS','DS','RA','SN','DZ','GR','GS','SG','IC','PL','UP','TS','TSRA','TSRAGR','RASN','SNRA','FZRA','FZDZ','FZFG','BCFG','BLSN','MIFG','PRFG','+RA','-RA','+SN','-SN','+DZ','-DZ','+TSRA','-TSRA']);
+function isWx(t){if(WXSET.has(t))return true;const s=t.replace(/^[+-]/,'').replace(/^(MI|BC|PR|DR|BL|SH|TS|FZ|VC)/,'');return WXSET.has(s);}
 function colorize(raw){
-  const toks=raw.split(/(\s+)/); const out=[]; let i=0;
+  const toks=raw.split(/(\s+)/);const out=[];let i=0;
   while(i<toks.length){
-    const t=toks[i]; const s=t.trim();
+    const t=toks[i];const s=t.trim();
     if(!s){out.push(t);i++;continue;}
+    // compound vis
     if(/^\d+$/.test(s)&&i+2<toks.length&&/^M?\d+\/\d+SM$/.test((toks[i+2]||'').trim())){
       const combo=s+' '+toks[i+2].trim();
       const mm=combo.match(/(\d+)\s+(\d+)\/(\d+)SM/);
       const v=mm?(+mm[1])+(+mm[2]/+mm[3]):0;
-      out.push(`<span class="cc-${flightRules(v,99999)}">${combo}</span>`);
-      i+=3;continue;
+      out.push(`<span class="c-${frFromVis(v,99999)}">${combo}</span>`);i+=3;continue;
     }
+    // vis
     const vm=s.match(/^M?(\d+)\/(\d+)SM$|^M?(\d+)SM$/);
-    if(vm){const v=vm[1]?+vm[1]/+vm[2]:Math.min(+vm[3],10);out.push(`<span class="cc-${flightRules(v,99999)}">${s}</span>`);i++;continue;}
+    if(vm){const v=vm[1]?+vm[1]/+vm[2]:Math.min(+vm[3],10);out.push(`<span class="c-${frFromVis(v,99999)}">${s}</span>`);i++;continue;}
+    // cloud
     const cm=s.match(/^(FEW|SCT|BKN|OVC|VV)(\d{3})(CB|TCU)?$/);
-    if(cm){const ic=['BKN','OVC','VV'].includes(cm[1]);if(ic){const fr=ceilFrKey(+cm[2]*100);out.push(`<span class="cc-cl-${fr}">${s}</span>`);}else out.push(s);i++;continue;}
-    if(isWxTok(s)){out.push(`<span class="cc-wx">${s}</span>`);i++;continue;}
+    if(cm){const ic=['BKN','OVC','VV'].includes(cm[1]);if(ic){out.push(`<span class="cc-${ceilFr(+cm[2]*100)}">${s}</span>`);}else out.push(s);i++;continue;}
+    // wx
+    if(isWx(s)){out.push(`<span class="wx-hi">${s}</span>`);i++;continue;}
     out.push(t);i++;
   }
   return out.join('');
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// WEATHER SYMBOL (day/night)
-// ═══════════════════════════════════════════════════════════════════
-function getWxSymbol(conditions,clouds,tz){
+/* ═══════════ WEATHER SYMBOL ═══════════════════════════════ */
+function wxSymbol(conditions,clouds,tz){
   const day=isDaytime(tz);
   const codes=(conditions||[]).map(c=>c.code||'');
   const has=c=>codes.some(x=>x.includes(c));
-  if(has('TS'))      return {icon:day?'⛈':'🌩',label:'Thunderstorm'};
-  if(has('GR'))      return {icon:'🌨',label:'Hail'};
-  if(has('FZRA'))    return {icon:'🌧',label:'Freezing Rain'};
-  if(has('FZDZ'))    return {icon:'🌧',label:'Freezing Drizzle'};
-  if(has('FZFG'))    return {icon:'🌫',label:'Freezing Fog'};
-  if(has('SN')||has('SG')||has('PL')) return {icon:day?'🌨':'❄',label:'Snow'};
-  if(has('RASN')||has('SNRA'))        return {icon:'🌨',label:'Rain/Snow Mix'};
-  if(has('RA'))   return {icon:'🌧',label:codes.find(x=>x.startsWith('+'))?'Heavy Rain':codes.find(x=>x.startsWith('-'))?'Light Rain':'Rain'};
-  if(has('DZ'))   return {icon:'🌦',label:'Drizzle'};
-  if(has('FG')||has('BCFG')||has('MIFG')) return {icon:'🌫',label:'Fog'};
-  if(has('BR'))   return {icon:'🌫',label:'Mist'};
-  if(has('HZ'))   return {icon:'🌫',label:'Haze'};
-  if(has('FU'))   return {icon:'🌫',label:'Smoke'};
+  if(has('TS'))        return {icon:day?'⛈':'🌩',sky:'Thunderstorm'};
+  if(has('GR'))        return {icon:'🌨',sky:'Hail'};
+  if(has('FZRA'))      return {icon:'🌧',sky:'Freezing Rain'};
+  if(has('FZDZ'))      return {icon:'🌧',sky:'Freezing Drizzle'};
+  if(has('FZFG'))      return {icon:'🌫',sky:'Freezing Fog'};
+  if(has('SN')||has('SG')||has('PL')) return {icon:day?'🌨':'❄',sky:'Snow'};
+  if(has('RASN')||has('SNRA'))        return {icon:'🌨',sky:'Rain/Snow'};
+  if(has('RA')) return {icon:'🌧',sky:codes.find(x=>x.startsWith('+'))?'Heavy Rain':codes.find(x=>x.startsWith('-'))?'Light Rain':'Rain'};
+  if(has('DZ')) return {icon:'🌦',sky:'Drizzle'};
+  if(has('FG')||has('BCFG')||has('MIFG')) return {icon:'🌫',sky:'Fog'};
+  if(has('BR')) return {icon:'🌫',sky:'Mist'};
+  if(has('HZ')) return {icon:'🌫',sky:'Haze'};
   const cov=(clouds||[]).map(c=>c.code);
-  if(cov.includes('OVC')) return {icon:day?'☁':'☁',label:'Overcast'};
-  if(cov.includes('BKN')) return {icon:day?'🌥':'☁',label:'Broken'};
-  if(cov.includes('SCT')) return {icon:day?'⛅':'🌤',label:'Scattered'};
-  if(cov.includes('FEW')) return {icon:day?'🌤':'🌙',label:'Few Clouds'};
-  return {icon:day?'☀':'🌙',label:day?'Clear':'Clear'};
+  if(cov.includes('OVC')) return {icon:day?'☁':'☁',sky:'Overcast'};
+  if(cov.includes('BKN')) return {icon:day?'🌥':'☁',sky:'Broken'};
+  if(cov.includes('SCT')) return {icon:day?'⛅':'🌤',sky:'Scattered'};
+  if(cov.includes('FEW')) return {icon:day?'🌤':'🌙',sky:'Few Clouds'};
+  return {icon:day?'☀':'🌙',sky:day?'Clear':'Clear'};
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// WIND ROSE SVG
-// ═══════════════════════════════════════════════════════════════════
-function windRoseSVG(deg,spd,size=72){
-  const cx=size/2,cy=size/2,r=size/2-6;
+/* ═══════════ WIND ROSE SVG ════════════════════════════════ */
+function windRose(deg,spd,sz=80){
+  const cx=sz/2,cy=sz/2,r=sz/2-5;
+  const col=spd>=35?'#ff3b5c':spd>=25?'#ffc107':spd>=15?'#4d9fff':'#00d4ff';
   if(deg===null||deg===undefined||isNaN(+deg)){
-    return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e3050" stroke-width="1.5"/>
-      <text x="${cx}" y="${cy+4}" text-anchor="middle" fill="#2d4d6a" font-size="10" font-family="monospace">VRB</text></svg>`;
+    return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#163256" stroke-width="1.5"/>
+      <circle cx="${cx}" cy="${cy}" r="${r*.6}" fill="none" stroke="#0f2847" stroke-width="1" stroke-dasharray="2,3"/>
+      <text x="${cx}" y="${cy+4}" text-anchor="middle" fill="#2d5580" font-size="10" font-family="monospace">VRB</text>
+    </svg>`;
   }
-  const col=spd>=35?'#ef5350':spd>=25?'#ffca28':spd>=15?'#42a5f5':'#00e5ff';
-  const rad=(+deg)*Math.PI/180;
-  const tx=cx+r*Math.sin(rad), ty=cy-r*Math.cos(rad);
-  const bx=cx-r*.55*Math.sin(rad), by=cy+r*.55*Math.cos(rad);
-  const lx1=tx-7*Math.cos(rad)-5*Math.sin(rad), ly1=ty-7*Math.sin(rad)+5*Math.cos(rad);
-  const lx2=tx-7*Math.cos(rad)+5*Math.sin(rad), ly2=ty-7*Math.sin(rad)-5*Math.cos(rad);
-  const cards=[{l:'N',x:cx,y:8},{l:'S',x:cx,y:size-3},{l:'E',x:size-4,y:cy+4},{l:'W',x:5,y:cy+4}];
-  const cardSvg=cards.map(c=>`<text x="${c.x}" y="${c.y}" text-anchor="middle" fill="#2d4d6a" font-size="8" font-family="monospace">${c.l}</text>`).join('');
-  // Speed rings
-  const ring1r=r*.4, ring2r=r*.7;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#1e3050" stroke-width="1"/>
-    <circle cx="${cx}" cy="${cy}" r="${ring2r}" fill="none" stroke="#162035" stroke-width=".5" stroke-dasharray="2,3"/>
-    <circle cx="${cx}" cy="${cy}" r="${ring1r}" fill="none" stroke="#162035" stroke-width=".5" stroke-dasharray="2,3"/>
-    ${cardSvg}
-    <circle cx="${cx}" cy="${cy}" r="3" fill="${col}" opacity=".8"/>
-    <line x1="${bx}" y1="${by}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+  const rad=+deg*Math.PI/180;
+  const tx=cx+r*Math.sin(rad),ty=cy-r*Math.cos(rad);
+  const bx=cx-r*.5*Math.sin(rad),by=cy+r*.5*Math.cos(rad);
+  const a1=rad+2.5,a2=rad-2.5;
+  const lx1=tx-8*Math.cos(a1),ly1=ty-8*Math.sin(a1);//  was: -8*Math.cos(a1)
+  const lx2=tx-8*Math.cos(a2),ly2=ty-8*Math.sin(a2);
+  // Cardinal ticks
+  const ticks=[0,90,180,270].map(a=>{
+    const ar=a*Math.PI/180;
+    return `<line x1="${cx+r*.85*Math.sin(ar)}" y1="${cy-r*.85*Math.cos(ar)}" x2="${cx+r*Math.sin(ar)}" y2="${cy-r*Math.cos(ar)}" stroke="#163256" stroke-width="1.5"/>`;
+  }).join('');
+  const labs=[{l:'N',a:0},{l:'E',a:90},{l:'S',a:180},{l:'W',a:270}].map(({l,a})=>{
+    const ar=a*Math.PI/180,d=r*.72;
+    return `<text x="${cx+d*Math.sin(ar)}" y="${cy-d*Math.cos(ar)+3}" text-anchor="middle" fill="#163256" font-size="7" font-family="monospace">${l}</text>`;
+  }).join('');
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#163256" stroke-width="1.5"/>
+    <circle cx="${cx}" cy="${cy}" r="${r*.6}" fill="none" stroke="#0f2847" stroke-width="1" stroke-dasharray="2,3"/>
+    ${ticks}${labs}
+    <circle cx="${cx}" cy="${cy}" r="3" fill="${col}" opacity=".7"/>
+    <line x1="${bx}" y1="${by}" x2="${tx}" y2="${ty}" stroke="${col}" stroke-width="2.5" stroke-linecap="round"/>
     <polygon points="${tx},${ty} ${lx1},${ly1} ${lx2},${ly2}" fill="${col}"/>
   </svg>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// CheckWX API
-// ═══════════════════════════════════════════════════════════════════
+/* ═══════════ CheckWX API ═══════════════════════════════════ */
 async function cwx(path){
   try{
-    const r=await fetch(`${CWX_BASE}${path}`,{headers:{'X-API-Key':API_KEY},signal:AbortSignal.timeout(10000)});
+    const r=await fetch(CWX+path,{headers:{'X-API-Key':API_KEY},signal:AbortSignal.timeout(10000)});
     if(!r.ok) return null;
     return await r.json();
-  }catch(e){console.warn('cwx',e);return null;}
+  }catch(e){console.warn('CWX',e);return null;}
 }
-async function getMetarCwx(icao){const j=await cwx(`/metar/${icao}/decoded`);return j?.data?.[0]||null;}
-async function getTafCwx(icao){const j=await cwx(`/taf/${icao}/decoded`);return j?.data?.[0]||null;}
-async function getRunways(icao){
-  if(runwayCache[icao]) return runwayCache[icao];
+async function cwxMetar(icao){const j=await cwx(`/metar/${icao}/decoded`);return j?.data?.[0]||null;}
+async function cwxTaf(icao){const j=await cwx(`/taf/${icao}/decoded`);return j?.data?.[0]||null;}
+async function cwxRunways(icao){
+  if(rwyCache[icao]) return rwyCache[icao];
   const j=await cwx(`/station/${icao}/runways`);
   const rws=(j?.data?.[0]?.runways||[]).map(r=>({
-    he_ident:r.he_ident||'??',le_ident:r.le_ident||'??',
-    he_heading:r.he_heading_degT??null,le_heading:r.le_heading_degT??null,
-    length_ft:r.length_ft||0,width_ft:r.width_ft||0,
-  })).filter(r=>r.he_heading!==null);
-  runwayCache[icao]=rws; return rws;
+    he:r.he_ident||'??', le:r.le_ident||'??',
+    heHdg:r.he_heading_degT??null, leHdg:r.le_heading_degT??null,
+    len:r.length_ft||0, wid:r.width_ft||0,
+  })).filter(r=>r.heHdg!==null);
+  rwyCache[icao]=rws; return rws;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// IEM ASOS HISTORY
-// ═══════════════════════════════════════════════════════════════════
-async function getIemHistory(icao, hours){
-  const now=new Date();
-  const end=now.toISOString().replace('T',' ').substring(0,16);
-  const start=new Date(now-hours*3600*1000).toISOString().replace('T',' ').substring(0,16);
-  const url=`${IEM_BASE}/obhistory.json?station=${icao}&network=ASOS&tz=UTC&date1=${encodeURIComponent(start)}&date2=${encodeURIComponent(end)}`;
+/* ═══════════ IEM ASOS HISTORY ════════════════════════════ */
+async function iemHistory(icao,hours){
+  // Use IEM's asos.json endpoint with hours parameter — much simpler
+  const url=`https://mesonet.agron.iastate.edu/api/1/asos.json?station=${icao}&hours=${hours}&tz=UTC&limit=200&recent=1800`;
   try{
-    const r=await fetch(url,{signal:AbortSignal.timeout(12000)});
-    if(!r.ok) return [];
+    const r=await fetch(url,{signal:AbortSignal.timeout(15000)});
+    if(!r.ok){ throw new Error('HTTP '+r.status); }
     const j=await r.json();
-    document.getElementById('s-iem').textContent='OK';
-    document.getElementById('s-iem').className='st-ok';
-    return j?.data||[];
+    const data=j?.data||j?.features?.map(f=>f.properties)||[];
+    document.getElementById('st-iem').textContent='OK';
+    document.getElementById('st-iem').className='st-ok';
+    return data;
   }catch(e){
-    console.warn('IEM error',e);
-    document.getElementById('s-iem').textContent='ERR';
-    document.getElementById('s-iem').className='st-err';
-    return [];
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// PARSE CheckWX METAR
-// ═══════════════════════════════════════════════════════════════════
-function parseCwx(d){
-  if(!d) return {};
-  const o={raw:d.raw_text||'',obsTime:d.observed?fmtTime(d.observed):''};
-  if(d.wind){o.windDir=d.wind.degrees??null;o.windVar=!!d.wind.variable_direction;o.windSpd=d.wind.speed_kts??0;o.windGust=d.wind.gust_kts||null;}
-  if(d.visibility){o.vis=d.visibility.miles_float??d.visibility.miles??null;if(o.vis!==null)o.vis=Math.min(+o.vis,10);}
-  o.clouds=(d.clouds||[]).map(c=>({code:c.code,feet:c.feet||0}));
-  const ceil=o.clouds.find(c=>['BKN','OVC','VV'].includes(c.code));
-  o.ceil=ceil?ceil.feet:null;
-  if(d.temperature){o.temp=d.temperature.celsius??null;}
-  if(d.dewpoint)   {o.dew=d.dewpoint.celsius??null;}
-  if(d.barometer)  {o.alt=d.barometer.hg?.toFixed(2)??null;}
-  o.conditions=d.conditions||[];
-  o.fr=d.flight_category||flightRules(o.vis??null,o.ceil??null);
-  // Humidity
-  if(o.temp!=null&&o.dew!=null){
-    o.humidity=Math.round(100-5*(o.temp-o.dew));
-    o.humidity=Math.max(0,Math.min(100,o.humidity));
-  }
-  // Feels like (heat index / wind chill)
-  if(o.temp!=null){
-    const tf=c2f(o.temp);
-    if(tf>=80&&o.humidity!=null){
-      // Heat index (Rothfusz)
-      const hi=-42.379+2.04901523*tf+10.14333127*(o.humidity)-0.22475541*tf*(o.humidity)
-        -0.00683783*tf*tf-0.05481717*(o.humidity)*(o.humidity)
-        +0.00122874*tf*tf*(o.humidity)+0.00085282*tf*(o.humidity)*(o.humidity)
-        -0.00000199*tf*tf*(o.humidity)*(o.humidity);
-      o.feelsLikeF=+hi.toFixed(1);
-      o.feelsLikeC=+((hi-32)*5/9).toFixed(1);
-    } else if(tf<=50&&o.windSpd>3){
-      // Wind chill
-      const wc=35.74+0.6215*tf-35.75*Math.pow(o.windSpd,0.16)+0.4275*tf*Math.pow(o.windSpd,0.16);
-      o.feelsLikeF=+wc.toFixed(1);
-      o.feelsLikeC=+((wc-32)*5/9).toFixed(1);
-    } else {
-      o.feelsLikeF=tf;o.feelsLikeC=o.temp;
+    // Fallback: try the obhistory endpoint with date range
+    try{
+      const now=new Date();
+      const end=now.toISOString().slice(0,16).replace('T',' ');
+      const start=new Date(now-hours*3600000).toISOString().slice(0,16).replace('T',' ');
+      const url2=`https://mesonet.agron.iastate.edu/api/1/obhistory.json?station=${icao}&network=ASOS&tz=UTC&date1=${encodeURIComponent(start)}&date2=${encodeURIComponent(end)}`;
+      const r2=await fetch(url2,{signal:AbortSignal.timeout(15000)});
+      if(!r2.ok) throw new Error('HTTP '+r2.status);
+      const j2=await r2.json();
+      document.getElementById('st-iem').textContent='OK';
+      document.getElementById('st-iem').className='st-ok';
+      return j2?.data||[];
+    }catch(e2){
+      console.warn('IEM both endpoints failed',e,e2);
+      document.getElementById('st-iem').textContent='ERR';
+      document.getElementById('st-iem').className='st-err';
+      return [];
     }
   }
-  // Spread
-  if(o.temp!=null&&o.dew!=null) o.spread=+(o.temp-o.dew).toFixed(1);
+}
+
+/* ═══════════ PARSE CWX METAR ══════════════════════════════ */
+function parseCwx(d){
+  if(!d) return {};
+  const o={raw:d.raw_text||'',t:d.observed?fmtZ(d.observed):''};
+  if(d.wind){o.wDir=d.wind.degrees??null;o.wVar=!!d.wind.variable_direction;o.wSpd=d.wind.speed_kts??0;o.wGust=d.wind.gust_kts||null;}
+  if(d.visibility){o.vis=d.visibility.miles_float??d.visibility.miles??null;if(o.vis!=null)o.vis=Math.min(+o.vis,10);}
+  o.clouds=(d.clouds||[]).map(c=>({code:c.code,ft:c.feet||0}));
+  const ceil=o.clouds.find(c=>['BKN','OVC','VV'].includes(c.code));
+  o.ceil=ceil?ceil.ft:null;
+  o.temp=d.temperature?.celsius??null;
+  o.dew=d.dewpoint?.celsius??null;
+  o.alt=d.barometer?.hg?.toFixed(2)??null;
+  o.conds=d.conditions||[];
+  o.fr=d.flight_category||frFromVis(o.vis??null,o.ceil??null);
+  // Derived
+  if(o.temp!=null&&o.dew!=null){
+    o.rh=Math.max(0,Math.min(100,Math.round(100-5*(o.temp-o.dew))));
+    o.spread=+(o.temp-o.dew).toFixed(1);
+  }
+  // Feels like
+  if(o.temp!=null){
+    const tf=toF(o.temp);
+    if(tf>=80&&o.rh!=null){
+      const hi=-42.379+2.04901523*tf+10.14333127*o.rh-0.22475541*tf*o.rh-0.00683783*tf*tf-0.05481717*o.rh*o.rh+0.00122874*tf*tf*o.rh+0.00085282*tf*o.rh*o.rh-0.00000199*tf*tf*o.rh*o.rh;
+      o.feelsF=+hi.toFixed(1); o.feelsC=toC(o.feelsF);
+    } else if(tf<=50&&o.wSpd>3){
+      const wc=35.74+0.6215*tf-35.75*Math.pow(o.wSpd,0.16)+0.4275*tf*Math.pow(o.wSpd,0.16);
+      o.feelsF=+wc.toFixed(1); o.feelsC=toC(o.feelsF);
+    } else { o.feelsF=tf; o.feelsC=o.temp; }
+  }
   return o;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// SIDEBAR
-// ═══════════════════════════════════════════════════════════════════
+/* ═══════════ SIDEBAR ═══════════════════════════════════════ */
 function buildSidebar(){
   document.getElementById('ap-list').innerHTML=AIRPORTS.map((a,i)=>`
-    <div class="apit${a.icao===cur.icao?' active':''}" id="ap-${a.icao}" onclick="selectAp(${i})">
-      <span class="fdot fd-UNK" id="dot-${a.icao}"></span>
-      <div class="ap-info">
-        <div class="ap-id">${a.icao}</div>
-        <div class="ap-nm">${a.name}</div>
-        <div class="ap-wx" id="apwx-${a.icao}">—</div>
-        <div class="ap-local" id="aploc-${a.icao}">${localHHMM(a.tz)} L</div>
+    <div class="ap-item${a.icao===cur.icao?' sel':''}" id="ap-item-${a.icao}" onclick="pickAp(${i})">
+      <span class="fr-dot fr-UNK" id="ap-dot-${a.icao}"></span>
+      <div class="ap-meta">
+        <div class="ap-icao">${a.icao}</div>
+        <div class="ap-name">${a.name}</div>
+        <div class="ap-wx"  id="ap-wx-${a.icao}">—</div>
+        <div class="ap-time" id="ap-time-${a.icao}">${localHM(a.tz)} L</div>
       </div>
     </div>`).join('');
 }
-function setDot(icao,fr){const d=document.getElementById('dot-'+icao);if(d)d.className='fdot fd-'+frKey(fr);}
-function updateSidebarItem(icao,data){
+function setDot(icao,fr){const el=document.getElementById('ap-dot-'+icao);if(el)el.className='fr-dot fr-'+frKey(fr);}
+function setSidebarItem(icao,data){
   if(!data) return;
-  const fr=data.flight_category||'UNK'; setDot(icao,fr);
-  const el=document.getElementById('apwx-'+icao);
+  const fr=data.flight_category||'UNK';
+  setDot(icao,fr);
+  const el=document.getElementById('ap-wx-'+icao);
   if(el){
     const d=parseCwx(data);
-    const wind=d.windVar?`VRB@${d.windSpd}kt`:d.windDir!=null?`${String(d.windDir).padStart(3,'0')}@${d.windSpd}kt`:'---';
-    el.innerHTML=`<span class="frb frb-${fr}" style="font-size:9px;padding:0 4px">${fr}</span> ${wind}`;
+    const w=d.wVar?`VRB@${d.wSpd}kt`:d.wDir!=null?`${String(d.wDir).padStart(3,'0')}@${d.wSpd}kt`:'—';
+    el.innerHTML=`<span class="frb ${fr}" style="font-size:9px;padding:1px 5px;letter-spacing:1px">${fr}</span> ${w}`;
   }
-  const lel=document.getElementById('aploc-'+icao);
-  const ap=AIRPORTS.find(a=>a.icao===icao);
-  if(lel&&ap) lel.textContent=localHHMM(ap.tz)+' L';
 }
-function updateMarkerColor(icao,fr){
-  const el=document.getElementById('map-dot-'+icao);
+function setMarkerFR(icao,fr){
+  const el=document.getElementById('mrkr-'+icao);
   if(!el) return;
-  const colors={VFR:'#b3d9ff',MVFR:'#42a5f5',IFR:'#ef5350',LIFR:'#ec407a',UNK:'#00e5ff'};
+  const lbl=document.getElementById('mrkr-lbl-'+icao);
+  const colors={VFR:'#a8d8ff',MVFR:'#4d9fff',IFR:'#ff4444',LIFR:'#ff44aa',UNK:'#00d4ff'};
   const c=colors[fr]||colors.UNK;
-  el.style.borderColor=c;
-  el.style.background=`rgba(${hexToRgb(c)},.18)`;
-  el.style.boxShadow=`0 0 10px ${c}`;
-  if(el.nextElementSibling) el.nextElementSibling.style.color=c;
+  el.style.borderColor=c; el.style.boxShadow=`0 0 12px ${c}, 0 0 4px ${c}`; el.style.background=`rgba(${hex3(c)},.2)`;
+  if(lbl) lbl.style.color=c;
 }
+function hex3(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)].join(',');}
 
-// ═══════════════════════════════════════════════════════════════════
-// RENDER METAR CURRENT
-// ═══════════════════════════════════════════════════════════════════
-function renderMetarCurrent(data){
-  lastMetarData=data;
-  const p=document.getElementById('p-metar');
+/* ═══════════ RENDER CURRENT OBS ═══════════════════════════ */
+function renderObs(data){
+  lastObs=data;
+  const el=document.getElementById('cell-obs');
   if(!data){
-    p.innerHTML='<div class="errbox">⚠ No METAR for '+cur.icao+'</div>';
-    document.getElementById('s-cwx').textContent='NO DATA';document.getElementById('s-cwx').className='st-warn';
+    el.innerHTML='<div class="errbox">⚠ No METAR data for '+cur.icao+'</div>';
+    document.getElementById('st-cwx').textContent='NO DATA'; document.getElementById('st-cwx').className='st-warn';
     return;
   }
-  document.getElementById('s-cwx').textContent='OK';document.getElementById('s-cwx').className='st-ok';
+  document.getElementById('st-cwx').textContent='OK'; document.getElementById('st-cwx').className='st-ok';
   const d=parseCwx(data);
-  if(d.obsTime) document.getElementById('t-obs').textContent=d.obsTime;
+  if(d.t) document.getElementById('obs-time').textContent=d.t;
   updateBanner(d);
 
-  const sym=getWxSymbol(d.conditions,d.clouds,cur.tz);
-  const wDeg=d.windVar?null:d.windDir;
-  const wSvg=windRoseSVG(wDeg,d.windSpd||0,80);
+  const sym=wxSymbol(d.conds,d.clouds,cur.tz);
+  const rose=windRose(d.wVar?null:d.wDir, d.wSpd||0, 80);
 
-  // Temperature display
-  const tempDisp=dispTemp(d.temp);
-  const dewDisp=dispTemp(d.dew);
-  const feelsDisp=tempUnit==='F'?`${d.feelsLikeF??'—'}°F`:`${d.feelsLikeC??'—'}°C`;
-  const spreadDisp=d.spread!=null?(tempUnit==='F'?`${+(d.spread*9/5).toFixed(1)}°F`:`${d.spread}°C`):'—';
-  const tempColor=d.temp!=null?(d.temp>=35?'tv-temp':d.temp>=20?'#ffca28':d.temp>=0?'#69f0ae':'#42a5f5'):'tv-temp';
+  // Temperature color
+  const tC=d.temp; const tval=unit==='F'?toF(tC):tC;
+  const tcol=tC==null?'var(--t2)':tC>=35?'#ff6d4a':tC>=20?'#ffca28':tC>=5?'#69f0ae':'#42a5f5';
 
-  // Ceiling text
-  const ceilTxt=d.ceil!=null?`${d.ceil.toLocaleString()} ft`:d.clouds.length===0?'SKC/CLR':'—';
+  const feelD=unit==='F'?`${d.feelsF??'—'}°F`:`${d.feelsC??'—'}°C`;
+  const spreadD=d.spread!=null?(unit==='F'?`${+(d.spread*9/5).toFixed(1)}°F`:`${d.spread}°C`):'—';
+  const ceilTxt=d.ceil!=null?`${d.ceil.toLocaleString()} ft`:(d.clouds.length===0?'SKC':'—');
+  const wxCodes=d.conds.map(c=>`<span class="wx-hi">${c.code}</span>`).join(' ')||'';
 
-  // Wx codes highlight
-  const wxCodes=d.conditions.map(c=>`<span class="cc-wx">${c.code}</span>`).join(' ')||'—';
+  el.innerHTML=`
+<div style="display:flex;flex-direction:column;gap:8px;height:100%">
 
-  p.innerHTML=`
-  <div class="cond-wrap">
-    <div class="cond-hero">
-      <div class="cond-symbol">${sym.icon}</div>
-      <div class="cond-main-vals">
-        <div class="cond-temp ${tempColor}">${tempDisp}</div>
-        <div class="cond-sky">${sym.label}</div>
-        <div class="cond-wxcodes">${wxCodes}</div>
-        <div style="font-family:var(--mono);font-size:clamp(8px,.8vw,10px);color:var(--txt3);margin-top:2px">${isDaytime(cur.tz)?'☀ DAYTIME':'🌙 NIGHTTIME'} · ${cur.icao}</div>
+  <!-- HERO -->
+  <div class="obs-hero">
+    <div class="obs-symbol-col">
+      <div class="obs-icon">${sym.icon}</div>
+      <div class="obs-daynight">${isDaytime(cur.tz)?'☀ DAY':'🌙 NIGHT'}</div>
+    </div>
+    <div class="obs-main">
+      <div class="obs-temp-big" style="color:${tcol}">${dispT(d.temp)}</div>
+      <div class="obs-sky-txt">${sym.sky}</div>
+      <div class="obs-wxcodes">${wxCodes||'<span style="color:var(--t3)">—</span>'}</div>
+    </div>
+  </div>
+
+  <!-- WIND -->
+  <div class="obs-wind">
+    <div class="wind-rose-cell">${rose}</div>
+    <div class="wind-data-cell">
+      <div class="wd-field">
+        <span class="wd-lbl">Direction</span>
+        <span class="wd-val" style="color:#c77dff">${d.wVar?'VRB':d.wDir!=null?String(d.wDir).padStart(3,'0')+'°':'---'}</span>
+      </div>
+      <div class="wd-field">
+        <span class="wd-lbl">Speed</span>
+        <span class="wd-val" style="color:#c77dff">${d.wSpd??'--'} kt</span>
+      </div>
+      <div class="wd-field">
+        <span class="wd-lbl">Gusts</span>
+        <span class="wd-val" style="color:${d.wGust?'var(--amber)':'var(--t3)'}">${d.wGust?d.wGust+' kt':'None'}</span>
       </div>
     </div>
+  </div>
 
-    <div class="cond-grid">
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Feels Like</span>
-        <span class="cond-tile-val tv-temp">${feelsDisp}</span>
-        <span class="cond-tile-sub">Heat index / Wind chill</span>
-      </div>
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Dewpoint</span>
-        <span class="cond-tile-val tv-dew">${dewDisp}</span>
-        <span class="cond-tile-sub">Spread: ${spreadDisp}</span>
-      </div>
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Humidity</span>
-        <span class="cond-tile-val tv-hum">${d.humidity!=null?d.humidity+'%':'—'}</span>
-      </div>
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Visibility</span>
-        <span class="cond-tile-val cc-${flightRules(d.vis??null,99999)}">${d.vis!=null?d.vis+' SM':'—'}</span>
-      </div>
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Ceiling</span>
-        <span class="cond-tile-val tv-ceil">${ceilTxt}</span>
-        <span class="cond-tile-sub">${d.clouds.map(c=>`${c.code} ${(c.feet/100).toFixed(0).padStart(3,'0')}`).join(' ')}</span>
-      </div>
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Altimeter</span>
-        <span class="cond-tile-val tv-alt">${d.alt?d.alt+'"':'—'}</span>
-      </div>
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Flight Cat</span>
-        <span class="cond-tile-val"><span class="frb frb-${d.fr}">${d.fr}</span></span>
-      </div>
-      <div class="cond-tile">
-        <span class="cond-tile-lbl">Obs Time</span>
-        <span class="cond-tile-val" style="font-size:clamp(12px,1.3vw,16px)">${d.obsTime||'—'}</span>
-      </div>
+  <!-- TILES -->
+  <div class="obs-tiles">
+    <div class="tile"><span class="tile-lbl">Feels Like</span><span class="tile-val c-temp">${feelD}</span></div>
+    <div class="tile"><span class="tile-lbl">Dewpoint</span><span class="tile-val c-dew">${dispT(d.dew)}</span><span class="tile-sub">Spread ${spreadD}</span></div>
+    <div class="tile"><span class="tile-lbl">Humidity</span><span class="tile-val c-hum">${d.rh!=null?d.rh+'%':'—'}</span></div>
+    <div class="tile"><span class="tile-lbl">Visibility</span><span class="tile-val c-${frFromVis(d.vis??null,99999)}">${d.vis!=null?d.vis+' SM':'—'}</span></div>
+    <div class="tile"><span class="tile-lbl">Ceiling</span><span class="tile-val c-ceil">${ceilTxt}</span><span class="tile-sub">${d.clouds.map(c=>c.code+' '+(c.ft/100).toFixed(0).padStart(3,'0')).join(' ')||'—'}</span></div>
+    <div class="tile"><span class="tile-lbl">Altimeter</span><span class="tile-val c-alt">${d.alt?d.alt+'"':'—'}</span></div>
+  </div>
 
-      <!-- Wind card spans full width -->
-      <div class="wind-card">
-        <div class="wind-rose-wrap">${wSvg}</div>
-        <div class="wind-detail">
-          <div class="wd-item"><span class="wd-lbl">Direction</span><span class="wd-val tv-wind">${d.windVar?'VRB':d.windDir!=null?String(d.windDir).padStart(3,'0')+'°':'---'}</span></div>
-          <div class="wd-item"><span class="wd-lbl">Speed</span><span class="wd-val tv-wind">${d.windSpd??'--'} kt</span></div>
-          <div class="wd-item"><span class="wd-lbl">Gusts</span><span class="wd-val" style="color:${d.windGust?'var(--wx)':'var(--txt3)'}">${d.windGust?d.windGust+' kt':'None'}</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="raw">${colorize(d.raw)}</div>
-  </div>`;
+  <!-- RAW -->
+  <div class="raw-metar">${colorize(d.raw)}</div>
+</div>`;
 }
 
 function updateBanner(d){
   const fr=d.fr||'UNK';
-  document.getElementById('bn-fr').textContent=fr;document.getElementById('bn-fr').className='frb frb-'+fr;
-  document.getElementById('bn-wind').textContent=d.windDir!=null?`${String(d.windDir).padStart(3,'0')}@${d.windSpd}${d.windGust?'G'+d.windGust:''}KT`:d.windVar?`VRB@${d.windSpd}KT`:'—';
+  document.getElementById('bn-fr').textContent=fr; document.getElementById('bn-fr').className='frb '+fr;
+  document.getElementById('bn-wind').textContent=d.wDir!=null?`${String(d.wDir).padStart(3,'0')}@${d.wSpd}${d.wGust?'G'+d.wGust:''}KT`:d.wVar?`VRB@${d.wSpd}KT`:'—';
   const ve=document.getElementById('bn-vis');
-  if(d.vis!=null){ve.textContent=d.vis+' SM';ve.className='bn-val cc-'+flightRules(d.vis,99999);}else{ve.textContent='—';ve.className='bn-val';}
+  if(d.vis!=null){ve.textContent=d.vis+' SM';ve.className='bn-value c-'+frFromVis(d.vis,99999);}else{ve.textContent='—';ve.className='bn-value';}
   const ce=document.getElementById('bn-ceil');
-  if(d.ceil!=null){ce.textContent=d.ceil.toLocaleString()+' ft';ce.className='bn-val cc-cl-'+ceilFrKey(d.ceil);}else{ce.textContent='SKC';ce.className='bn-val';}
-  document.getElementById('bn-temp').textContent=d.temp!=null?`${dispTempNum(d.temp)} / ${dispTempNum(d.dew)}`:'—';
+  if(d.ceil!=null){ce.textContent=d.ceil.toLocaleString()+' ft';ce.className='bn-value cc-'+ceilFr(d.ceil);}else{ce.textContent='SKC';ce.className='bn-value';}
+  document.getElementById('bn-td').textContent=d.temp!=null?`${dispTNum(d.temp)} / ${dispTNum(d.dew)}`:'—';
   document.getElementById('bn-alt').textContent=d.alt?d.alt+'"':'—';
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// METAR HISTORY (IEM) + CHARTS
-// ═══════════════════════════════════════════════════════════════════
-async function loadMetarHistory(icao,hours){
-  document.getElementById('p-metar').innerHTML='<div class="loading"><div class="spin"></div><span>LOADING HISTORY…</span></div>';
-  document.getElementById('s-iem').textContent='…';document.getElementById('s-iem').className='st-warn';
-  const rows=await getIemHistory(icao,hours);
-  if(!rows||rows.length===0){
-    document.getElementById('p-metar').innerHTML='<div class="errbox">No IEM history found for '+icao+'</div>';return;
-  }
-  // Sort oldest→newest
-  rows.sort((a,b)=>new Date(a.valid)-new Date(b.valid));
-  renderHistoryWithCharts(rows,hours);
-}
-
-function renderHistoryWithCharts(rows,hours){
-  const p=document.getElementById('p-metar');
-  // Build chart data
-  const labels=rows.map(r=>{const d=new Date(r.valid);return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;});
-  const temps=rows.map(r=>r.tmpf!=null?(tempUnit==='C'?+(( r.tmpf-32)*5/9).toFixed(1):+r.tmpf):null);
-  const winds=rows.map(r=>r.sknt??null);
-  const alts=rows.map(r=>r.alti??null);
-  const viss=rows.map(r=>r.vsby??null);
-
-  // Destroy old charts
-  Object.values(chartInstances).forEach(c=>{try{c.destroy();}catch(e){}});
-  chartInstances={};
-
-  // History table (last 10 for readability)
-  const recent=rows.slice(-Math.min(rows.length,20)).reverse();
-  const tblHdr=`<div class="hist-hdr"><span>TIME Z</span><span>CAT</span><span>WIND</span><span>VIS</span><span>METAR</span></div>`;
-  const tblRows=recent.map(r=>{
-    // IEM returns raw metar in r.metar field and individual decoded fields
-    const vis=r.vsby!=null?r.vsby+' SM':'—';
-    const wind=r.drct!=null&&r.sknt!=null?`${String(+r.drct).padStart(3,'0')}@${r.sknt}`:r.sknt!=null?`VRB@${r.sknt}`:'—';
-    const tmp=r.tmpf!=null?(tempUnit==='F'?r.tmpf+'°F':+(( r.tmpf-32)*5/9).toFixed(0)+'°C'):'—';
-    // Compute FR from IEM fields
-    const visMi=r.vsby??null;
-    const fr=flightRules(visMi,null);
-    const t=new Date(r.valid);
-    const ts=`${String(t.getUTCHours()).padStart(2,'0')}:${String(t.getUTCMinutes()).padStart(2,'0')}Z`;
-    return `<div class="hist-row">
-      <span style="color:var(--txt2)">${ts}</span>
-      <span class="frb frb-${fr}" style="font-size:9px;padding:0 4px">${fr}</span>
-      <span>${wind}</span>
-      <span class="cc-${flightRules(visMi,99999)}">${vis}</span>
-      <span style="font-family:var(--mono);font-size:clamp(8px,.8vw,9px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:var(--txt2)">${r.metar||'—'}</span>
-    </div>`;
-  }).join('');
-
-  const chartHtml=`
-  <div class="chart-grid">
-    <div class="chart-card"><div class="chart-lbl">Temperature (${tempUnit==='F'?'°F':'°C'})</div><div class="chart-canvas-wrap"><canvas id="ch-temp"></canvas></div></div>
-    <div class="chart-card"><div class="chart-lbl">Wind Speed (kt)</div><div class="chart-canvas-wrap"><canvas id="ch-wind"></canvas></div></div>
-    <div class="chart-card"><div class="chart-lbl">Altimeter (inHg)</div><div class="chart-canvas-wrap"><canvas id="ch-alt"></canvas></div></div>
-    <div class="chart-card"><div class="chart-lbl">Visibility (SM)</div><div class="chart-canvas-wrap"><canvas id="ch-vis"></canvas></div></div>
-  </div>`;
-
-  p.innerHTML=chartHtml+tblHdr+tblRows;
-
-  // Draw charts
-  const step=Math.max(1,Math.floor(labels.length/12));
-  const filteredLabels=labels.filter((_,i)=>i%step===0);
-
-  function mkChart(id,data,color,label){
-    const el=document.getElementById(id);
-    if(!el) return;
-    const stepped=data.filter((_,i)=>i%step===0);
-    const ctx=el.getContext('2d');
-    const c=new Chart(ctx,{
-      type:'line',
-      data:{
-        labels:filteredLabels,
-        datasets:[{label,data:stepped,borderColor:color,backgroundColor:color+'22',
-          borderWidth:2,pointRadius:0,pointHoverRadius:3,tension:.4,fill:true,spanGaps:true}]
-      },
-      options:{
-        animation:false,responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
-          callbacks:{label:ctx=>`${ctx.parsed.y??'N/A'}`},
-          backgroundColor:'rgba(6,13,24,.9)',titleColor:'#7baed4',bodyColor:'#e8f4ff',borderColor:'#1e3050',borderWidth:1,
-        }},
-        scales:{
-          x:{display:true,ticks:{color:'#2d4d6a',font:{size:9},maxRotation:0,autoSkip:true,maxTicksLimit:6},grid:{color:'#0d1a2b'}},
-          y:{display:true,ticks:{color:'#2d4d6a',font:{size:9}},grid:{color:'#0d1a2b'}},
-        }
-      }
-    });
-    chartInstances[id]=c;
-  }
-  mkChart('ch-temp',temps,'#ff6e40','Temp');
-  mkChart('ch-wind',winds,'#e040fb','Wind');
-  mkChart('ch-alt',alts,'#ffca28','Alt');
-  mkChart('ch-vis',viss,'#00e5ff','Vis');
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// HISTORY TAB CONTROL
-// ═══════════════════════════════════════════════════════════════════
+/* ═══════════ HISTORY + CHARTS ══════════════════════════════ */
 function setHours(h,btn){
   histHours=h;
-  document.querySelectorAll('.htab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  if(h===0) loadMetarCwxAndRender(cur.icao);
-  else loadMetarHistory(cur.icao,h);
-}
-async function loadMetarCwxAndRender(icao){
-  document.getElementById('p-metar').innerHTML='<div class="loading"><div class="spin"></div><span>LOADING…</span></div>';
-  const d=await getMetarCwx(icao);
-  renderMetarCurrent(d);
+  document.querySelectorAll('.htab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(h===0){
+    loadObsAndRender(cur.icao);
+  } else {
+    loadHistory(cur.icao,h);
+  }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// TAF
-// ═══════════════════════════════════════════════════════════════════
+async function loadObsAndRender(icao){
+  document.getElementById('cell-obs').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  const d=await cwxMetar(icao);
+  renderObs(d);
+}
+
+async function loadHistory(icao,hours){
+  document.getElementById('cell-obs').innerHTML='<div class="loading"><div class="spinner"></div><span style="font-family:var(--f-ui);font-size:10px;letter-spacing:2px;margin-top:6px">FETCHING IEM DATA…</span></div>';
+  document.getElementById('st-iem').textContent='…'; document.getElementById('st-iem').className='st-warn';
+  const rows=await iemHistory(icao,hours);
+  if(!rows||rows.length===0){
+    document.getElementById('cell-obs').innerHTML='<div class="errbox">No history data returned from IEM for '+icao+'.<br><br>IEM may not have ASOS data for this station, or the network is unavailable.</div>';
+    return;
+  }
+  rows.sort((a,b)=>new Date(a.valid||a.utc_valid)-new Date(b.valid||b.utc_valid));
+  renderHistCharts(rows);
+}
+
+function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
+
+function renderHistCharts(rows){
+  destroyCharts();
+  const el=document.getElementById('cell-obs');
+
+  // Extract fields — IEM uses different field names depending on endpoint
+  const getF=(r,keys)=>{for(const k of keys){if(r[k]!=null)return +r[k];}return null;};
+  const times=rows.map(r=>{
+    const v=r.valid||r.utc_valid||r.date;
+    if(!v) return '?';
+    const d=new Date(v);
+    return `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`;
+  });
+  const rawTemps=rows.map(r=>getF(r,['tmpf','tmp','temperature']));
+  const dispTemps=rawTemps.map(t=>{
+    if(t==null) return null;
+    return unit==='C'?+((t-32)*5/9).toFixed(1):t;
+  });
+  const winds=rows.map(r=>getF(r,['sknt','wind_speed','wspd']));
+  const alts=rows.map(r=>getF(r,['alti','altimeter','pressure']));
+  const viss=rows.map(r=>getF(r,['vsby','visibility','vis']));
+
+  // Table data (most recent first, max 30 rows)
+  const tbl=rows.slice(-30).reverse();
+
+  el.innerHTML=`
+<div style="display:flex;flex-direction:column;gap:8px">
+  <div class="charts-area">
+    <div class="chart-card">
+      <div class="chart-title">Temp (${unit==='F'?'°F':'°C'})</div>
+      <div class="chart-wrap"><canvas id="ch-t"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Wind (kt)</div>
+      <div class="chart-wrap"><canvas id="ch-w"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Altimeter (inHg)</div>
+      <div class="chart-wrap"><canvas id="ch-a"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Visibility (SM)</div>
+      <div class="chart-wrap"><canvas id="ch-v"></canvas></div>
+    </div>
+  </div>
+  <table class="hist-tbl">
+    <thead><tr>
+      <th>Time Z</th><th>Cat</th><th>Wind</th><th>Vis</th><th>Temp</th><th>Raw METAR</th>
+    </tr></thead>
+    <tbody>
+    ${tbl.map(r=>{
+      const v=r.valid||r.utc_valid||'';
+      const d=new Date(v);
+      const ts=v?`${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}Z`:'—';
+      const vis=getF(r,['vsby','visibility']);
+      const fr=frFromVis(vis,null);
+      const wdir=getF(r,['drct','wdir','wind_dir']);
+      const wspd=getF(r,['sknt','wind_speed','wspd']);
+      const wind=wdir!=null&&wspd!=null?`${String(+wdir).padStart(3,'0')}@${+wspd}`:wspd!=null?`${+wspd}`:'—';
+      const tmp=getF(r,['tmpf','tmp']);
+      const tmpD=tmp!=null?(unit==='F'?tmp+'°F':+((tmp-32)*5/9).toFixed(0)+'°C'):'—';
+      const raw=r.metar||r.raw||'';
+      return `<tr>
+        <td style="color:var(--t2)">${ts}</td>
+        <td><span class="frb ${fr}" style="font-size:9px;padding:1px 5px;letter-spacing:1px">${fr}</span></td>
+        <td>${wind}</td>
+        <td class="c-${frFromVis(vis,99999)}">${vis!=null?vis+' SM':'—'}</td>
+        <td style="color:var(--t2)">${tmpD}</td>
+        <td style="font-family:var(--f-mono);font-size:9px;color:var(--t3);max-width:180px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${raw}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+</div>`;
+
+  // Render charts after DOM update
+  requestAnimationFrame(()=>{
+    const chartCfg=(id,data,color,label)=>{
+      const canvas=document.getElementById(id);
+      if(!canvas) return;
+      // Thin out data if too many points
+      const step=Math.max(1,Math.floor(times.length/40));
+      const tL=times.filter((_,i)=>i%step===0);
+      const dL=data.filter((_,i)=>i%step===0);
+      charts[id]=new Chart(canvas,{
+        type:'line',
+        data:{
+          labels:tL,
+          datasets:[{
+            label,data:dL,
+            borderColor:color,
+            backgroundColor:color+'18',
+            borderWidth:1.5,
+            pointRadius:0,
+            pointHoverRadius:4,
+            tension:.3,fill:true,spanGaps:true
+          }]
+        },
+        options:{
+          responsive:false,
+          animation:false,
+          plugins:{legend:{display:false},tooltip:{
+            mode:'index',intersect:false,
+            backgroundColor:'rgba(5,14,28,.95)',
+            titleColor:'#6fa8d4',bodyColor:'#e4f2ff',
+            borderColor:'#163256',borderWidth:1,
+            padding:6,
+            callbacks:{label:ctx=>`${label}: ${ctx.parsed.y??'N/A'}`}
+          }},
+          scales:{
+            x:{
+              ticks:{color:'#2d5580',font:{size:8,family:'Share Tech Mono'},maxRotation:0,autoSkip:true,maxTicksLimit:6},
+              grid:{color:'#0f2847'}
+            },
+            y:{
+              ticks:{color:'#2d5580',font:{size:8,family:'Share Tech Mono'}},
+              grid:{color:'#0f2847'}
+            }
+          }
+        }
+      });
+      // Force canvas size
+      canvas.style.width='100%';
+      canvas.style.height='80px';
+    };
+    chartCfg('ch-t',dispTemps,'#ff6d4a','Temp');
+    chartCfg('ch-w',winds,'#c77dff','Wind');
+    chartCfg('ch-a',alts,'#ffc107','Alt');
+    chartCfg('ch-v',viss,'#00d4ff','Vis');
+  });
+}
+
+/* ═══════════ TAF ═══════════════════════════════════════════ */
 function renderTaf(data){
-  const p=document.getElementById('p-taf');
-  if(!data){p.innerHTML='<div class="errbox">⚠ No TAF for '+cur.icao+'</div>';return;}
+  const el=document.getElementById('cell-taf');
+  if(!data){el.innerHTML='<div class="errbox">⚠ No TAF for '+cur.icao+'</div>';return;}
   const raw=(data.raw_text||'').trim();
   const fmt=raw
     .replace(/\s+(FM\d{6}|BECMG|TEMPO|PROB\d{2})/g,'\n     $1')
     .replace(/\s+(WS\d{3}\/\d{5}KT)/g,'\n          $1');
   if(data.timestamp){
-    const f=fmtTime(data.timestamp.from),t=fmtTime(data.timestamp.to);
-    document.getElementById('t-taf').textContent=`${f} – ${t}`;
+    document.getElementById('taf-valid').textContent=`${fmtZ(data.timestamp.from)} – ${fmtZ(data.timestamp.to)}`;
   }
-  p.innerHTML=`<div class="taf-raw-block">${colorize(fmt)}</div>`;
+  el.innerHTML=`<div class="taf-raw">${colorize(fmt)}</div>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// CROSSWIND
-// ═══════════════════════════════════════════════════════════════════
-function calcXwind(windDir,windSpd,rwyHdg){
-  if(windDir===null||windSpd===null) return null;
-  const diff=(windDir-rwyHdg)*Math.PI/180;
-  const hw=Math.round(windSpd*Math.cos(diff));
-  const xw=Math.abs(Math.round(windSpd*Math.sin(diff)));
-  return {headwind:hw>=0?hw:0,tailwind:hw<0?-hw:0,crosswind:xw};
+/* ═══════════ CROSSWIND ═════════════════════════════════════ */
+function calcXW(wDir,wSpd,rwyHdg){
+  if(wDir==null||wSpd==null) return null;
+  const diff=(wDir-rwyHdg)*Math.PI/180;
+  const hw=Math.round(wSpd*Math.cos(diff));
+  const xw=Math.abs(Math.round(wSpd*Math.sin(diff)));
+  return {hw:hw>=0?hw:0,tw:hw<0?-hw:0,xw};
 }
-function xwLimit(w){return w>=150?25:w>=100?20:15;}
+const xwLim=w=>w>=150?25:w>=100?20:15;
 
-function xwindSetSource(src,btn){
-  xwindSource=src;
-  document.querySelectorAll('.xtab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderXwind();
+function xSrc(src,btn){
+  document.querySelectorAll('.xtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(src==='obs'&&lastObs){
+    const d=parseCwx(lastObs);
+    xSrcData={wDir:d.wVar?null:d.wDir,wSpd:d.wSpd||0,wGust:d.wGust,wVar:d.wVar||false,label:'OBS '+d.t};
+  }
+  renderXW();
 }
-function xwindSelectTaf(idx,btn){
-  xwindSource='taf-'+idx;
+function xSrcTaf(idx,btn){
+  document.querySelectorAll('.xtab').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
   const p=curTafPeriods[idx];
-  if(!p) return;
-  xwindSourceData={windDir:p.windVar?null:p.windDir,windSpd:p.windSpd,windGust:p.windGust,windVar:p.windVar,label:p.label};
-  document.querySelectorAll('.xtab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderXwind();
+  if(p) xSrcData={wDir:p.wVar?null:p.wDir,wSpd:p.wSpd,wGust:p.wGust,wVar:p.wVar,label:p.label};
+  renderXW();
 }
 
-async function loadRunwaysAndXwind(icao,metarData,tafData){
-  document.getElementById('p-xwind').innerHTML='<div class="loading"><div class="spin"></div><span>LOADING RUNWAYS…</span></div>';
-  curRunways=await getRunways(icao);
+async function loadXW(icao,metarData,tafData){
+  document.getElementById('cell-xw').innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  curRwys=await cwxRunways(icao);
   curTafPeriods=[];
   if(tafData?.forecast){
     tafData.forecast.forEach((f,i)=>{
       if(!f.wind) return;
       const chg=f.change?.indicator?.code||(i===0?'BASE':'FM');
-      const from=f.timestamp?.from?fmtTime(f.timestamp.from):'';
-      curTafPeriods.push({idx:i,label:chg==='BASE'?'BASE':`${chg} ${from}`,shortLabel:chg==='BASE'?'BASE':`${chg}${i}`,windDir:f.wind.degrees??null,windSpd:f.wind.speed_kts??0,windGust:f.wind.gust_kts||null,windVar:!!f.wind.variable_direction});
+      curTafPeriods.push({
+        idx:i,wDir:f.wind.degrees??null,wSpd:f.wind.speed_kts??0,
+        wGust:f.wind.gust_kts||null,wVar:!!f.wind.variable_direction,
+        label:chg+(f.timestamp?.from?' '+fmtZ(f.timestamp.from):''),
+        short:chg==='BASE'?'BASE':chg+i,
+      });
     });
   }
   if(metarData){
     const d=parseCwx(metarData);
-    xwindSourceData={windDir:d.windVar?null:d.windDir,windSpd:d.windSpd||0,windGust:d.windGust||null,windVar:d.windVar||false,label:`OBS ${d.obsTime||''}`};
+    xSrcData={wDir:d.wVar?null:d.wDir,wSpd:d.wSpd||0,wGust:d.wGust,wVar:d.wVar||false,label:'OBS '+d.t};
   }
   // Rebuild TAF tabs
-  const container=document.getElementById('xwind-taf-tabs');
-  if(container) container.innerHTML=curTafPeriods.map((p,i)=>`<button class="xtab" id="xtab-taf-${i}" onclick="xwindSelectTaf(${i},this)">${p.shortLabel}</button>`).join('');
-  document.querySelectorAll('.xtab').forEach((b,i)=>{b.classList.toggle('active',b.id==='xtab-obs');});
-  xwindSource='obs';
-  renderXwind();
+  const tc=document.getElementById('xt-taf-tabs');
+  if(tc) tc.innerHTML=curTafPeriods.map((p,i)=>`<button class="xtab" onclick="xSrcTaf(${i},this)">${p.short}</button>`).join('');
+  document.querySelectorAll('.xtab').forEach(b=>{b.classList.toggle('on',b.id==='xt-obs');});
+  renderXW();
 }
 
-function renderXwind(){
-  const p=document.getElementById('p-xwind');
-  if(!curRunways.length){p.innerHTML='<div class="errbox">⚠ No runway data for '+cur.icao+'</div>';return;}
-  const wind=xwindSourceData;
-  const windDir=wind?.windDir??null,windSpd=wind?.windSpd??0,windGust=wind?.windGust??null,isVar=wind?.windVar??false;
-  const effSpd=windGust||windSpd;
-  let html=`<div class="xwind-src">Source: ${wind?.label||'—'}${isVar?' · VARIABLE':''}</div><div class="rwy-grid">`;
-  curRunways.forEach(rwy=>{
-    const leHdg=rwy.le_heading??((rwy.he_heading+180)%360);
-    const he=calcXwind(windDir,effSpd,rwy.he_heading);
-    const le=calcXwind(windDir,effSpd,leHdg);
-    const lim=xwLimit(rwy.width_ft);
-    // Best end
-    const heScore=he?(he.headwind-he.tailwind*2):-999;
-    const leScore=le?(le.headwind-le.tailwind*2):-999;
-    const bestEnd=heScore>=leScore?'he':'le';
-    // Runway SVG
-    const cx=32,cy=32,rlen=22,rw=6;
-    const rad=rwy.he_heading*Math.PI/180;
+function renderXW(){
+  const el=document.getElementById('cell-xw');
+  if(!curRwys.length){el.innerHTML='<div class="errbox">⚠ No runway data for '+cur.icao+'</div>';return;}
+  const w=xSrcData;
+  const wDir=w?.wDir??null, wSpd=w?.wSpd??0, wGust=w?.wGust??null, isVar=w?.wVar??false;
+  const eff=wGust||wSpd;
+  let html=`<div class="xw-src">Wind source: ${w?.label||'—'}${isVar?' · VARIABLE':''}</div><div class="rwy-list">`;
+
+  curRwys.forEach(rwy=>{
+    const leHdg=rwy.leHdg??((rwy.heHdg+180)%360);
+    const heXW=calcXW(wDir,eff,rwy.heHdg);
+    const leXW=calcXW(wDir,eff,leHdg);
+    const lim=xwLim(rwy.wid);
+    const heScore=heXW?(heXW.hw-heXW.tw*2):-999;
+    const leScore=leXW?(leXW.hw-leXW.tw*2):-999;
+    const best=heScore>=leScore?'he':'le';
+
+    // Mini runway SVG
+    const cx=30,cy=30,rl=22,rw=6;
+    const rad=rwy.heHdg*Math.PI/180;
     let wArrow='';
-    if(windDir!==null&&!isVar){const wr=windDir*Math.PI/180;const wx2=cx+22*Math.sin(wr),wy2=cy-22*Math.cos(wr),wx1=cx-12*Math.sin(wr),wy1=cy+12*Math.cos(wr);wArrow=`<line x1="${wx1}" y1="${wy1}" x2="${wx2}" y2="${wy2}" stroke="rgba(255,202,40,.65)" stroke-width="1.5" stroke-dasharray="2,2"/><polygon points="${wx2},${wy2} ${wx2-4*Math.cos(wr)-3*Math.sin(wr)},${wy2-4*Math.sin(wr)+3*Math.cos(wr)} ${wx2-4*Math.cos(wr)+3*Math.sin(wr)},${wy2-4*Math.sin(wr)-3*Math.cos(wr)}" fill="rgba(255,202,40,.65)"/>`;}
-    const rsvg=`<svg width="64" height="64" viewBox="0 0 64 64" style="flex-shrink:0">
-      <circle cx="${cx}" cy="${cy}" r="30" fill="none" stroke="#1e3050" stroke-width="1"/>
-      <rect x="${cx-rw/2}" y="${cy-rlen}" width="${rw}" height="${rlen*2}" transform="rotate(${rwy.he_heading},${cx},${cy})" fill="#243d5c" rx="1"/>
-      <text x="${cx-rlen*Math.sin(rad)}" y="${cy+rlen*Math.cos(rad)+3}" text-anchor="middle" fill="#7baed4" font-size="7" font-family="monospace">${rwy.le_ident}</text>
-      <text x="${cx+rlen*Math.sin(rad)}" y="${cy-rlen*Math.cos(rad)-2}" text-anchor="middle" fill="#7baed4" font-size="7" font-family="monospace">${rwy.he_ident}</text>
+    if(wDir!=null&&!isVar){const wr=wDir*Math.PI/180;const wx2=cx+22*Math.sin(wr),wy2=cy-22*Math.cos(wr),wx1=cx-12*Math.sin(wr),wy1=cy+12*Math.cos(wr);wArrow=`<line x1="${wx1}" y1="${wy1}" x2="${wx2}" y2="${wy2}" stroke="rgba(255,193,7,.6)" stroke-width="1.5" stroke-dasharray="2,2"/><polygon points="${wx2},${wy2} ${wx2-4*Math.cos(wr)-3*Math.sin(wr)},${wy2-4*Math.sin(wr)+3*Math.cos(wr)} ${wx2-4*Math.cos(wr)+3*Math.sin(wr)},${wy2-4*Math.sin(wr)-3*Math.cos(wr)}" fill="rgba(255,193,7,.6)"/>`;}
+    const rsvg=`<svg width="60" height="60" viewBox="0 0 60 60" style="flex-shrink:0">
+      <circle cx="${cx}" cy="${cy}" r="28" fill="none" stroke="#163256" stroke-width="1"/>
+      <rect x="${cx-rw/2}" y="${cy-rl}" width="${rw}" height="${rl*2}" transform="rotate(${rwy.heHdg},${cx},${cy})" fill="#1e4070" rx="1"/>
+      <text x="${cx-rl*Math.sin(rad)}" y="${cy+rl*Math.cos(rad)+3}" text-anchor="middle" fill="#6fa8d4" font-size="7" font-family="monospace">${rwy.le}</text>
+      <text x="${cx+rl*Math.sin(rad)}" y="${cy-rl*Math.cos(rad)-2}" text-anchor="middle" fill="#6fa8d4" font-size="7" font-family="monospace">${rwy.he}</text>
       ${wArrow}
     </svg>`;
-    function endHtml(ident,hdg,xw,isBest){
+
+    function endBlock(ident,hdg,xw,isPref){
       if(!xw) return '';
-      const xpct=Math.min(xw.crosswind/lim*100,100);
-      const hpct=Math.min(xw.headwind/50*100,100);
-      const tpct=Math.min(xw.tailwind/20*100,100);
-      const xcls=xw.crosswind>lim?'xw-bad':xw.crosswind>lim*.75?'xw-cau':'xw-ok';
-      const xfcls=xw.crosswind>lim?'xf-xwx':'xf-xw';
-      return `<div style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(30,48,80,.7)">
-        <div style="font-family:var(--cond);font-size:clamp(10px,1vw,12px);color:var(--txt2);margin-bottom:3px">
-          RWY <b style="color:var(--txt);font-size:clamp(12px,1.3vw,15px)">${ident}</b> (${String(hdg).padStart(3,'0')}°T)
-          ${isBest?'<span style="color:var(--cyan);font-size:9px;margin-left:4px">★</span>':''}
-        </div>
-        <div class="xbar-row"><span class="xbar-lbl">HW</span><div class="xbar-track"><div class="xbar-fill xf-hw" style="width:${hpct}%"></div></div><span class="xbar-val xw-ok">${xw.headwind}kt</span></div>
-        ${xw.tailwind>0?`<div class="xbar-row"><span class="xbar-lbl">TW</span><div class="xbar-track"><div class="xbar-fill xf-tw" style="width:${tpct}%"></div></div><span class="xbar-val xw-bad">${xw.tailwind}kt</span></div>`:''}
-        <div class="xbar-row"><span class="xbar-lbl">XW</span><div class="xbar-track"><div class="xbar-fill ${xfcls}" style="width:${xpct}%"></div></div><span class="xbar-val ${xcls}">${xw.crosswind}kt</span></div>
-        <div style="font-family:var(--cond);font-size:clamp(7px,.75vw,9px);color:${xw.crosswind>lim?'var(--ifr)':xw.crosswind>lim*.75?'var(--wx)':'var(--txt3)'};margin-top:2px">${xw.crosswind<=lim?'✓ Within':'✗ Exceeds'} ~${lim}kt limit</div>
-      </div>`;
+      const pct_xw=Math.min(xw.xw/lim*100,100);
+      const pct_hw=Math.min(xw.hw/50*100,100);
+      const pct_tw=Math.min(xw.tw/20*100,100);
+      const xcls=xw.xw>lim?'xw-bad':xw.xw>lim*.75?'xw-cau':'xw-ok';
+      const xfcls=xw.xw>lim?'xf-xwbad':'xf-xw';
+      return `<div class="rwy-end-label">RWY <b>${ident}</b> (${String(hdg).padStart(3,'0')}°) ${isPref?'<span class="rwy-pref">★ PREF</span>':''}</div>
+        <div class="xbar"><span class="xbar-lbl">HW</span><div class="xbar-track"><div class="xbar-fill xf-hw" style="width:${pct_hw}%"></div></div><span class="xbar-num xw-ok">${xw.hw}kt</span></div>
+        ${xw.tw>0?`<div class="xbar"><span class="xbar-lbl">TW</span><div class="xbar-track"><div class="xbar-fill xf-tw" style="width:${pct_tw}%"></div></div><span class="xbar-num xw-bad">${xw.tw}kt</span></div>`:''}
+        <div class="xbar"><span class="xbar-lbl">XW</span><div class="xbar-track"><div class="xbar-fill ${xfcls}" style="width:${pct_xw}%"></div></div><span class="xbar-num ${xcls}">${xw.xw}kt</span></div>
+        <div style="font-family:var(--f-ui);font-size:9px;color:${xw.xw>lim?'var(--red)':xw.xw>lim*.75?'var(--amber)':'var(--t3)'};letter-spacing:.5px;margin-top:1px">${xw.xw<=lim?'✓ Within limit':'✗ Exceeds'} ~${lim}kt</div>`;
     }
+
     html+=`<div class="rwy-card">
-      <div class="rwy-hdr"><div class="rwy-name">${rwy.he_ident}/${rwy.le_ident}</div><div class="rwy-len">${rwy.length_ft.toLocaleString()}×${rwy.width_ft}ft</div></div>
-      <div class="rwy-body">${rsvg}<div style="flex:1;min-width:0;font-family:var(--mono);font-size:clamp(8px,.8vw,10px);color:var(--txt3)">${isVar?'<span style="color:var(--wx)">VAR WIND</span>':windDir===null?'No wind data':`${String(windDir).padStart(3,'0')}°@${windSpd}${windGust?'G'+windGust:''}kt`}</div></div>
-      ${endHtml(rwy.he_ident,rwy.he_heading,he,bestEnd==='he')}
-      ${endHtml(rwy.le_ident,leHdg,le,bestEnd==='le')}
+      <div class="rwy-top"><span class="rwy-id">${rwy.he}/${rwy.le}</span><span class="rwy-dim">${rwy.len.toLocaleString()}×${rwy.wid}ft</span></div>
+      <div class="rwy-body">
+        ${rsvg}
+        <div style="flex:1;min-width:0;font-family:var(--f-mono);font-size:10px;color:var(--t3)">
+          ${isVar?'<span style="color:var(--amber)">VAR WIND</span>':wDir==null?'No wind data':`<span style="color:var(--t1)">${String(wDir).padStart(3,'0')}° @ ${wSpd}${wGust?'G'+wGust:''}kt</span>`}
+        </div>
+      </div>
+      ${endBlock(rwy.he,rwy.heHdg,heXW,best==='he')}
+      ${endBlock(rwy.le,leHdg,leXW,best==='le')}
     </div>`;
   });
   html+='</div>';
-  p.innerHTML=html;
+  el.innerHTML=html;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// MAP
-// ═══════════════════════════════════════════════════════════════════
+/* ═══════════ MAP SETUP ═════════════════════════════════════ */
 function initMap(){
   map=new maplibregl.Map({
     container:'map',
     style:{
       version:8,
+      glyphs:'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
       sources:{
-        base:{type:'raster',
-          // Higher contrast dark map
-          tiles:['https://a.basemaps.cartocdn.com/dark_matter_no_labels/{z}/{x}/{y}{r}.png',
-                 'https://b.basemaps.cartocdn.com/dark_matter_no_labels/{z}/{x}/{y}{r}.png'],
-          tileSize:256,attribution:'© OpenStreetMap © CARTO',maxzoom:19},
-        labels:{type:'raster',
-          tiles:['https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'],
-          tileSize:256,maxzoom:19},
+        carto:{
+          type:'raster',
+          tiles:['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                 'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                 'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'],
+          tileSize:256, attribution:'© CARTO © OpenStreetMap', maxzoom:19,
+        }
       },
-      layers:[
-        {id:'base',type:'raster',source:'base'},
-        {id:'labels',type:'raster',source:'labels','paint':{'raster-opacity':0.7}},
-      ]
+      layers:[{id:'bg',type:'raster',source:'carto',paint:{'raster-brightness-min':0,'raster-brightness-max':1,'raster-contrast':0.2,'raster-saturation':-0.3}}]
     },
-    center:[cur.lon,cur.lat],zoom:8,attributionControl:false,
+    center:[cur.lon,cur.lat], zoom:8, attributionControl:false,
   });
-  map.addControl(new maplibregl.NavigationControl(),'top-left');
+  map.addControl(new maplibregl.NavigationControl({showCompass:true}),'top-left');
   map.addControl(new maplibregl.AttributionControl({compact:true}),'bottom-right');
   map.on('load',()=>{
-    addRadar();
-    addAllRings();
-    AIRPORTS.forEach(a=>addApMarker(a));
-    document.getElementById('s-radar').textContent='LIVE';
-    document.getElementById('s-radar').className='st-ok';
+    addRadarLayer();
+    addRings();
+    AIRPORTS.forEach(addMarker);
+    document.getElementById('st-radar').textContent='LIVE';
+    document.getElementById('st-radar').className='st-ok';
+  });
+  map.on('error',e=>{
+    console.warn('Map error',e);
+    document.getElementById('st-radar').textContent='ERR';
+    document.getElementById('st-radar').className='st-err';
   });
 }
-function resetView(){map.flyTo({center:[cur.lon,cur.lat],zoom:8,duration:900});}
 
-function addApMarker(ap){
-  if(apMarkers[ap.icao]) apMarkers[ap.icao].remove();
-  const el=document.createElement('div');
-  el.style.cssText='display:flex;flex-direction:column;align-items:center;cursor:pointer;';
-  el.innerHTML=`<div id="map-dot-${ap.icao}" style="width:26px;height:26px;border-radius:50%;background:rgba(0,229,255,.15);border:2px solid #00e5ff;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .3s">✈</div>
-    <div id="map-lbl-${ap.icao}" style="font-family:monospace;font-size:10px;color:#00e5ff;margin-top:1px;font-weight:bold;text-shadow:0 0 6px #06131f,0 0 6px #06131f,0 0 6px #06131f">${ap.icao}</div>`;
-  const pop=new maplibregl.Popup({offset:20,closeButton:false})
-    .setHTML(`<div style="background:#09121f;border:1px solid #1e3050;color:#e8f4ff;padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px"><b>${ap.icao}</b><br>${ap.name}</div>`);
-  apMarkers[ap.icao]=new maplibregl.Marker({element:el}).setLngLat([ap.lon,ap.lat]).setPopup(pop).addTo(map);
-  el.addEventListener('click',()=>selectAp(AIRPORTS.findIndex(a=>a.icao===ap.icao)));
+function addRadarLayer(){
+  if(map.getLayer('radar')){map.removeLayer('radar');map.removeSource('radar-src');}
+  map.addSource('radar-src',{
+    type:'raster',
+    tiles:['https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png'],
+    tileSize:256, attribution:'NEXRAD via Iowa Mesonet', maxzoom:10,
+  });
+  map.addLayer({
+    id:'radar', type:'raster', source:'radar-src',
+    layout:{visibility:radarOn?'visible':'none'},
+    paint:{'raster-opacity':0.8,'raster-resampling':'nearest','raster-fade-duration':0,'raster-brightness-min':0.05}
+  });
 }
-function updateMarkerColor(icao,fr){
-  const el=document.getElementById('map-dot-'+icao);
-  const lbl=document.getElementById('map-lbl-'+icao);
-  if(!el) return;
-  const colors={VFR:'#b3d9ff',MVFR:'#42a5f5',IFR:'#ef5350',LIFR:'#ec407a',UNK:'#00e5ff'};
-  const c=colors[fr]||colors.UNK;
-  el.style.borderColor=c;el.style.background=`rgba(${hexToRgb(c)},.18)`;el.style.boxShadow=`0 0 12px ${c},0 0 4px ${c}`;
-  if(lbl){lbl.style.color=c;}
+
+function toggleRadar(){
+  radarOn=!radarOn;
+  if(map.getLayer('radar')) map.setLayoutProperty('radar','visibility',radarOn?'visible':'none');
+  document.getElementById('btn-radar').classList.toggle('on',radarOn);
 }
 
 function nm2m(nm){return nm*1852;}
 function ringCoords(lat,lon,m,n=90){
-  return Array.from({length:n+1},(_,i)=>{const a=i*2*Math.PI/n;return [lon+(m*Math.sin(a))/(111320*Math.cos(lat*Math.PI/180)),lat+(m*Math.cos(a))/111320];});
+  return Array.from({length:n+1},(_,i)=>{
+    const a=i*2*Math.PI/n;
+    return [lon+m*Math.sin(a)/(111320*Math.cos(lat*Math.PI/180)), lat+m*Math.cos(a)/111320];
+  });
 }
-function addAllRings(){
+
+function addRings(){
   AIRPORTS.forEach(ap=>{
-    [['r5-'+ap.icao,nm2m(5),'#ef4444',2.5,null],
-     ['r10-'+ap.icao,nm2m(10),'#eab308',1.5,[5,4]],
-     ['r25-'+ap.icao,nm2m(25),'#22c55e',1.5,[8,5]]
-    ].forEach(([id,m,color,w,dash])=>{
+    const specs=[
+      [`r5-${ap.icao}`, nm2m(5),  '#ef4444', 2.5, null],
+      [`r10-${ap.icao}`,nm2m(10), '#eab308', 1.5, [5,4]],
+      [`r25-${ap.icao}`,nm2m(25), '#22c55e', 1.5, [8,5]],
+    ];
+    specs.forEach(([id,m,col,w,dash])=>{
       if(map.getSource(id)){map.removeLayer(id);map.removeSource(id);}
       map.addSource(id,{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:ringCoords(ap.lat,ap.lon,m)}}});
-      const spec={id,type:'line',source:id,paint:{'line-color':color,'line-width':w,'line-opacity':.85}};
+      const spec={id,type:'line',source:id,paint:{'line-color':col,'line-width':w,'line-opacity':.9}};
       if(dash) spec.paint['line-dasharray']=dash;
       map.addLayer(spec);
     });
-    if(ap.icao!==cur.icao) setRingVis(ap.icao,false);
+    setRingVis(ap.icao, ap.icao===cur.icao);
   });
 }
-function setRingVis(icao,v){['r5-','r10-','r25-'].forEach(p=>{const id=p+icao;if(map.getLayer(id))map.setLayoutProperty(id,'visibility',v?'visible':'none');});}
+
+function setRingVis(icao,v){
+  ['r5-','r10-','r25-'].forEach(p=>{const id=p+icao;if(map.getLayer(id))map.setLayoutProperty(id,'visibility',v?'visible':'none');});
+}
 function showRings(icao){AIRPORTS.forEach(a=>setRingVis(a.icao,a.icao===icao));}
 
-function addRadar(){
-  if(map.getLayer('radar')){map.removeLayer('radar');map.removeSource('radar');}
-  map.addSource('radar',{
-    type:'raster',
-    tiles:['https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png'],
-    tileSize:256,attribution:'NEXRAD · Iowa Mesonet',maxzoom:10,
-  });
-  map.addLayer({id:'radar',type:'raster',source:'radar',
-    layout:{visibility:radarOn?'visible':'none'},
-    paint:{'raster-opacity':.78,'raster-resampling':'nearest','raster-fade-duration':0}
-  });
-  // Ensure rings are on top
-  AIRPORTS.forEach(ap=>{['r5-','r10-','r25-'].forEach(pre=>{const id=pre+ap.icao;if(map.getLayer(id))try{map.moveLayer(id);}catch(e){}});});
-}
-function toggleRadar(){
-  radarOn=!radarOn;
-  if(map.getLayer('radar')) map.setLayoutProperty('radar','visibility',radarOn?'visible':'none');
-  document.getElementById('mb-radar').classList.toggle('on',radarOn);
+function addMarker(ap){
+  if(markers[ap.icao]) markers[ap.icao].remove();
+  const el=document.createElement('div');
+  el.style.cssText='display:flex;flex-direction:column;align-items:center;cursor:pointer;';
+  el.innerHTML=`
+    <div id="mrkr-${ap.icao}" style="width:28px;height:28px;border-radius:50%;border:2px solid #00d4ff;background:rgba(0,212,255,.2);display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .3s;box-shadow:0 0 10px #00d4ff">✈</div>
+    <div id="mrkr-lbl-${ap.icao}" style="font-family:monospace;font-size:10px;color:#00d4ff;font-weight:bold;margin-top:2px;text-shadow:0 0 5px #020810,0 0 5px #020810">${ap.icao}</div>`;
+  const popup=new maplibregl.Popup({offset:22,closeButton:false})
+    .setHTML(`<div style="background:#050e1c;border:1px solid #163256;color:#e4f2ff;padding:7px 10px;font-family:monospace;font-size:11px;border-radius:3px;min-width:120px"><b>${ap.icao}</b><br><span style="color:#6fa8d4">${ap.name}</span></div>`);
+  markers[ap.icao]=new maplibregl.Marker({element:el}).setLngLat([ap.lon,ap.lat]).setPopup(popup).addTo(map);
+  el.addEventListener('click',e=>{e.stopPropagation();pickAp(AIRPORTS.findIndex(a=>a.icao===ap.icao));});
 }
 
-// Map tour
-let tourTimer2;
+function resetView(){map.flyTo({center:[cur.lon,cur.lat],zoom:8,duration:800});}
+
 function mapTour(){
-  if(tourActive){tourActive=false;clearTimeout(tourTimer2);resetView();document.getElementById('mb-tour').classList.remove('on');return;}
-  tourActive=true;tourIdx=0;document.getElementById('mb-tour').classList.add('on');
-  doTour();
+  if(tourOn){tourOn=false;clearTimeout(tourTmr);resetView();document.getElementById('btn-tour').classList.remove('on');return;}
+  tourOn=true;tourIdx=0;document.getElementById('btn-tour').classList.add('on');
+  doTourStep();
 }
-function doTour(){
-  if(!tourActive) return;
+function doTourStep(){
+  if(!tourOn) return;
   const ap=AIRPORTS[tourIdx];
   map.flyTo({center:[ap.lon,ap.lat],zoom:9,duration:2200});
   AIRPORTS.forEach(a=>setRingVis(a.icao,a.icao===ap.icao));
-  tourTimer2=setTimeout(()=>{tourIdx=(tourIdx+1)%AIRPORTS.length;doTour();},5000);
+  tourTmr=setTimeout(()=>{tourIdx=(tourIdx+1)%AIRPORTS.length;doTourStep();},5000);
 }
 
-// Lightning
+/* Lightning */
 async function toggleLtg(){
   ltgOn=!ltgOn;
-  document.getElementById('mb-ltg').classList.toggle('on',ltgOn);
+  document.getElementById('btn-ltg').classList.toggle('on',ltgOn);
   const card=document.getElementById('ltg-card');
-  if(!ltgOn){card.style.display='none';document.getElementById('s-ltg').textContent='OFF';return;}
-  loadLightning();
+  if(!ltgOn){card.style.display='none';document.getElementById('st-ltg').textContent='OFF';return;}
+  loadLtg();
 }
-async function loadLightning(){
+async function loadLtg(){
   if(!ltgOn) return;
   const card=document.getElementById('ltg-card');
-  document.getElementById('s-ltg').textContent='…';
+  document.getElementById('st-ltg').textContent='…';
   try{
     const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${cur.lat}&longitude=${cur.lon}&hourly=lightning_potential&forecast_days=1&timezone=UTC`,{signal:AbortSignal.timeout(8000)});
     const j=await r.json();
     const pct=Math.round(j?.hourly?.lightning_potential?.[new Date().getUTCHours()]??0);
-    const col=pct>60?'#ef5350':pct>30?'#ffca28':'#00e676';
-    card.style.display='block';card.style.color=col;card.style.borderColor=col;
-    card.innerHTML=`⚡ LTG POTENTIAL<br><span style="font-size:clamp(18px,2vw,26px);font-weight:700;font-family:var(--mono)">${pct}%</span><br><span style="font-size:clamp(7px,.7vw,9px);color:var(--txt3)">CURR HR · OPEN-METEO</span>`;
-    document.getElementById('s-ltg').textContent=pct+'%';
-    document.getElementById('s-ltg').className=pct>40?'st-warn':'st-ok';
-  }catch(e){card.style.display='block';card.innerHTML='⚡ N/A';document.getElementById('s-ltg').textContent='N/A';}
+    const col=pct>60?'#ff3b5c':pct>30?'#ffc107':'#00ff9d';
+    card.style.display='block'; card.style.color=col; card.style.borderColor=col;
+    card.innerHTML=`⚡ LTG POTENTIAL<br><span style="font-family:var(--f-display);font-size:24px;font-weight:700">${pct}%</span><br><span style="font-size:8px;color:var(--t3)">THIS HOUR · OPEN-METEO</span>`;
+    document.getElementById('st-ltg').textContent=pct+'%';
+    document.getElementById('st-ltg').className=pct>40?'st-warn':'st-ok';
+  }catch(e){card.style.display='block';card.innerHTML='⚡ N/A';}
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// LOAD ALL
-// ═══════════════════════════════════════════════════════════════════
-async function loadAll(){
-  const n=new Date();
-  document.getElementById('lbl-upd').textContent=`UPD ${String(n.getUTCHours()).padStart(2,'0')}:${String(n.getUTCMinutes()).padStart(2,'0')}Z`;
-  document.getElementById('s-cwx').textContent='…';document.getElementById('s-cwx').className='st-warn';
-
-  const [mData,tData]=await Promise.all([getMetarCwx(cur.icao),getTafCwx(cur.icao)]);
-  if(histHours===0) renderMetarCurrent(mData);
-  renderTaf(tData);
-  if(mData){const d=parseCwx(mData);setDot(cur.icao,d.fr);updateMarkerColor(cur.icao,d.fr);updateSidebarItem(cur.icao,mData);}
-  loadRunwaysAndXwind(cur.icao,mData,tData);
-
-  // Radar refresh
-  if(map?.loaded()&&map.getSource('radar')){
-    try{map.getSource('radar').setTiles([`https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?t=${Date.now()}`]);}catch(e){}
-  }
-  if(ltgOn) loadLightning();
-
-  // Sidebar background loads
-  AIRPORTS.filter(a=>a.icao!==cur.icao).forEach(async a=>{
-    const j=await cwx(`/metar/${a.icao}/decoded`);
-    const m=j?.data?.[0]||null;
-    if(m){updateSidebarItem(a.icao,m);const d=parseCwx(m);updateMarkerColor(a.icao,d.fr||'UNK');}
-  });
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// SELECT AIRPORT
-// ═══════════════════════════════════════════════════════════════════
-function selectAp(idx){
+/* ═══════════ PICK AIRPORT ══════════════════════════════════ */
+function pickAp(idx){
   cur=AIRPORTS[idx];
-  document.querySelectorAll('.apit').forEach(e=>e.classList.remove('active'));
-  document.getElementById('ap-'+cur.icao)?.classList.add('active');
+  document.querySelectorAll('.ap-item').forEach(e=>e.classList.remove('sel'));
+  document.getElementById('ap-item-'+cur.icao)?.classList.add('sel');
   document.getElementById('bn-icao').textContent=cur.icao;
-  document.getElementById('bn-name').textContent=cur.name;
-  if(tourActive){tourActive=false;clearTimeout(tourTimer2);document.getElementById('mb-tour').classList.remove('on');}
-  if(map){map.flyTo({center:[cur.lon,cur.lat],zoom:8,duration:900});showRings(cur.icao);}
+  document.getElementById('bn-sub').textContent=cur.name;
+  if(tourOn){tourOn=false;clearTimeout(tourTmr);document.getElementById('btn-tour').classList.remove('on');}
+  if(map){map.flyTo({center:[cur.lon,cur.lat],zoom:8,duration:800});showRings(cur.icao);}
+  // Reset history to NOW
   histHours=0;
-  document.querySelectorAll('.htab').forEach((b,i)=>b.classList.toggle('active',i===0));
-  xwindSource='obs';xwindSourceData=null;curRunways=[];curTafPeriods=[];
-  document.getElementById('p-xwind').innerHTML='<div class="loading"><div class="spin"></div><span>LOADING RUNWAYS…</span></div>';
-  if(document.getElementById('xwind-taf-tabs')) document.getElementById('xwind-taf-tabs').innerHTML='';
-  if(ltgOn) loadLightning();
+  document.querySelectorAll('.htab').forEach((b,i)=>b.classList.toggle('on',i===0));
+  destroyCharts();
+  if(ltgOn) loadLtg();
   loadAll();
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════════════════
+/* ═══════════ LOAD ALL ═══════════════════════════════════════ */
+async function loadAll(){
+  const n=new Date();
+  document.getElementById('hdr-upd').textContent=`UPD ${String(n.getUTCHours()).padStart(2,'0')}:${String(n.getUTCMinutes()).padStart(2,'0')}Z`;
+  document.getElementById('st-cwx').textContent='…'; document.getElementById('st-cwx').className='st-warn';
+
+  const [obsData,tafData]=await Promise.all([cwxMetar(cur.icao),cwxTaf(cur.icao)]);
+
+  if(histHours===0) renderObs(obsData);
+  renderTaf(tafData);
+  if(obsData){const d=parseCwx(obsData);setDot(cur.icao,d.fr);setMarkerFR(cur.icao,d.fr);setSidebarItem(cur.icao,obsData);}
+  loadXW(cur.icao,obsData,tafData);
+
+  // Refresh radar
+  if(map?.loaded()&&map.getSource('radar-src')){
+    try{map.getSource('radar-src').setTiles([`https://mesonet.agron.iastate.edu/cache/tile.py/1.0.0/nexrad-n0q-900913/{z}/{x}/{y}.png?t=${Date.now()}`]);}catch(e){}
+  }
+  if(ltgOn) loadLtg();
+
+  // Background sidebar loads
+  for(const ap of AIRPORTS.filter(a=>a.icao!==cur.icao)){
+    cwx(`/metar/${ap.icao}/decoded`).then(j=>{
+      const m=j?.data?.[0]||null;
+      if(m){setSidebarItem(ap.icao,m);const d=parseCwx(m);setMarkerFR(ap.icao,d.fr||'UNK');}
+    });
+  }
+}
+
+/* ═══════════ INIT ══════════════════════════════════════════ */
 buildSidebar();
 initMap();
 loadAll();
-setInterval(loadAll,5*60*1000);
+setInterval(loadAll, 5*60*1000);
 </script>
 </body>
 </html>

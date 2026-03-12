@@ -483,7 +483,7 @@ function colorize(raw){
     if(/^\d+$/.test(s)&&i+2<toks.length&&/^M?\d+\/\d+SM$/.test((toks[i+2]||'').trim())){
       const combo=s+' '+toks[i+2].trim();
       const mm=combo.match(/(\d+)\s+(\d+)\/(\d+)SM/);
-      const v=mm?+mm[1]++mm[2]/+mm[3]:0;
+      const v=mm?(+mm[1])+(+mm[2]/+mm[3]):0;
       const fr=flightRules(v,99999);
       out.push(`<span class="cc-${fr}">${combo}</span>`);
       i+=3;continue;
